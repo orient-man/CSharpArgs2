@@ -16,7 +16,7 @@ namespace ConsoleApplication
             }
             catch (ArgsException e)
             {
-                Console.WriteLine("Argument error: {0}", e.Message);
+                Console.WriteLine("Argument error: {0}", e.GetErrorMessage());
             }
         }
 

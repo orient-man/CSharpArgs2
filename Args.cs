@@ -1,318 +1,99 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ConsoleApplication
 {
     public class Args
     {
-        private readonly string schema;
-        private readonly string[] args;
-        private bool valid = true;
-        private readonly HashSet<Char> unexpectedArguments = new HashSet<char>();
+        private readonly Dictionary<Char, IArgumentMarshaler> marshalers;
+        private readonly HashSet<Char> argsFound;
+        private Iterator<String> currentArgument;
 
-        private readonly Dictionary<char, bool> booleanArgs =
-            new Dictionary<char, bool>();
-
-        private readonly Dictionary<char, string> stringArgs = new Dictionary<char, string>();
-        private readonly Dictionary<char, int> intArgs = new Dictionary<char, int>();
-        private readonly HashSet<char> argsFound = new HashSet<char>();
-        private int currentArgument;
-        private char errorArgumentId = '\0';
-        private string errorParameter = "TILT";
-        private ErrorCode errorCode = ErrorCode.Ok;
-
-        private enum ErrorCode
+        public Args(String schema, String[] args)
         {
-            Ok,
-            MissingString,
-            MissingInteger,
-            InvalidInteger,
-            UnexpectedArgument
+            marshalers = new Dictionary<char, IArgumentMarshaler>();
+            argsFound = new HashSet<Char>();
+
+            ParseSchema(schema);
+            ParseArgumentStrings(args);
         }
 
-        public Args(string schema, string[] args)
-        {
-            this.schema = schema;
-            this.args = args;
-            valid = Parse();
-        }
-
-        private bool Parse()
-        {
-            if (schema.Length == 0 && args.Length == 0)
-                return true;
-            ParseSchema();
-            try
-            {
-                ParseArguments();
-            }
-            catch (ArgsException)
-            {
-            }
-            return valid;
-        }
-
-        private bool ParseSchema()
+        private void ParseSchema(String schema)
         {
             foreach (var element in schema.Split(','))
-            {
                 if (element.Length > 0)
-                {
-                    var trimmedElement = element.Trim();
-                    ParseSchemaElement(trimmedElement);
-                }
-            }
-            return true;
+                    ParseSchemaElement(element.Trim());
         }
 
-        private void ParseSchemaElement(string element)
+        private void ParseSchemaElement(String element)
         {
             var elementId = element[0];
             var elementTail = element.Substring(1);
             ValidateSchemaElementId(elementId);
-            if (IsBooleanSchemaElement(elementTail))
-                ParseBooleanSchemaElement(elementId);
-            else if (IsStringSchemaElement(elementTail))
-                ParseStringSchemaElement(elementId);
-            else if (IsIntegerSchemaElement(elementTail))
-            {
-                ParseIntegerSchemaElement(elementId);
-            }
+            if (elementTail.Length == 0)
+                marshalers.Add(elementId, new BooleanArgumentMarshaler());
+            else if (elementTail == "*")
+                marshalers.Add(elementId, new StringArgumentMarshaler());
+            else if (elementTail == "#")
+                marshalers.Add(elementId, new IntegerArgumentMarshaler());
+            else if (elementTail == "##")
+                marshalers.Add(elementId, new DoubleArgumentMarshaler());
+            else if (elementTail == "[*]")
+                marshalers.Add(elementId, new StringArrayArgumentMarshaler());
             else
+                throw new ArgsException(
+                    ErrorCode.InvalidArgumentFormat,
+                    elementId,
+                    elementTail);
+        }
+
+        private static void ValidateSchemaElementId(char elementId)
+        {
+            if (!Char.IsLetter(elementId))
+                throw new ArgsException(ErrorCode.InvalidArgumentName, elementId, null);
+        }
+
+        private void ParseArgumentStrings(String[] argsList)
+        {
+            currentArgument = new Iterator<string>(argsList);
+            while (currentArgument.HasNext())
             {
-                throw new ArgumentException(
-                    string.Format(
-                        "Argument: {0} has invalid format: {1}.",
-                        elementId,
-                        elementTail));
+                var argString = currentArgument.Next();
+                if (argString.StartsWith("-"))
+                {
+                    ParseArgumentCharacters(argString.Substring(1));
+                }
+                else
+                {
+                    currentArgument.Previous();
+                    break;
+                }
             }
         }
 
-        private void ValidateSchemaElementId(char elementId)
+        private void ParseArgumentCharacters(String argChars)
         {
-            if (!char.IsLetter(elementId))
+            for (var i = 0; i < argChars.Length; i++)
+                ParseArgumentCharacter(argChars[i]);
+        }
+
+        private void ParseArgumentCharacter(char argChar)
+        {
+            if (!marshalers.ContainsKey(argChar))
             {
-                throw new ArgumentException(
-                    "Bad character:" + elementId + "in Args format: " + schema);
+                throw new ArgsException(ErrorCode.UnexpectedArgument, argChar, null);
             }
-        }
-
-        private void ParseBooleanSchemaElement(char elementId)
-        {
-            booleanArgs[elementId] = false;
-        }
-
-        private void ParseIntegerSchemaElement(char elementId)
-        {
-            intArgs[elementId] = 0;
-        }
-
-        private void ParseStringSchemaElement(char elementId)
-        {
-            stringArgs[elementId] = "";
-        }
-
-        private static bool IsStringSchemaElement(string elementTail)
-        {
-            return elementTail == "*";
-        }
-
-        private static bool IsBooleanSchemaElement(string elementTail)
-        {
-            return elementTail.Length == 0;
-        }
-
-        private static bool IsIntegerSchemaElement(string elementTail)
-        {
-            return elementTail == "#";
-        }
-
-        private bool ParseArguments()
-        {
-            for (currentArgument = 0; currentArgument < args.Length; currentArgument++)
-            {
-                var arg = args[currentArgument];
-                ParseArgument(arg);
-            }
-            return true;
-        }
-
-        private void ParseArgument(string arg)
-        {
-            if (arg.StartsWith("-"))
-                ParseElements(arg);
-        }
-
-        private void ParseElements(string arg)
-        {
-            for (var i = 1; i < arg.Length; i++)
-                ParseElement(arg[i]);
-        }
-
-        private void ParseElement(char argChar)
-        {
-            if (SetArgument(argChar))
-                argsFound.Add(argChar);
-            else
-            {
-                unexpectedArguments.Add(argChar);
-                errorCode = ErrorCode.UnexpectedArgument;
-                valid = false;
-            }
-        }
-
-        private bool SetArgument(char argChar)
-        {
-            if (IsBooleanArg(argChar))
-                SetBooleanArg(argChar, true);
-            else if (IsStringArg(argChar))
-                SetStringArg(argChar);
-            else if (IsIntArg(argChar))
-                SetIntArg(argChar);
-            else
-                return false;
-            return true;
-        }
-
-        private bool IsIntArg(char argChar)
-        {
-            return intArgs.ContainsKey(argChar);
-        }
-
-        private void SetIntArg(char argChar)
-        {
-            currentArgument++;
-            string parameter = null;
+            var m = marshalers[argChar];
+            argsFound.Add(argChar);
             try
             {
-                parameter = args[currentArgument];
-                intArgs[argChar] = Int32.Parse(parameter);
+                m.Set(currentArgument);
             }
-            catch (IndexOutOfRangeException)
+            catch (ArgsException e)
             {
-                valid = false;
-                errorArgumentId = argChar;
-                errorCode = ErrorCode.MissingInteger;
-                throw new ArgsException();
+                e.ErrorArgumentId = argChar;
+                throw;
             }
-            catch (FormatException)
-            {
-                valid = false;
-                errorArgumentId = argChar;
-                errorParameter = parameter;
-                errorCode = ErrorCode.InvalidInteger;
-                throw new ArgsException();
-            }
-        }
-
-        private void SetStringArg(char argChar)
-        {
-            currentArgument++;
-            try
-            {
-                stringArgs[argChar] = args[currentArgument];
-            }
-            catch (IndexOutOfRangeException)
-            {
-                valid = false;
-                errorArgumentId = argChar;
-                errorCode = ErrorCode.MissingString;
-                throw new ArgsException();
-            }
-        }
-
-        private bool IsStringArg(char argChar)
-        {
-            return stringArgs.ContainsKey(argChar);
-        }
-
-        private void SetBooleanArg(char argChar, bool value)
-        {
-            booleanArgs[argChar] = value;
-        }
-
-        private bool IsBooleanArg(char argChar)
-        {
-            return booleanArgs.ContainsKey(argChar);
-        }
-
-        public int Cardinality()
-        {
-            return argsFound.Count;
-        }
-
-        public string Usage()
-        {
-            if (schema.Length > 0)
-                return "-[" + schema + "]";
-            return "";
-        }
-
-        public string ErrorMessage()
-        {
-            switch (errorCode)
-            {
-                case ErrorCode.Ok:
-                    throw new Exception("TILT: Should not get here.");
-                case ErrorCode.UnexpectedArgument:
-                    return UnexpectedArgumentMessage();
-                case ErrorCode.MissingString:
-                    return string.Format(
-                        "Could not find string parameter for -{0}.",
-                        errorArgumentId);
-                case ErrorCode.InvalidInteger:
-                    return string.Format(
-                        "Argument -{0} expects an integer but was '{1}'.",
-                        errorArgumentId,
-                        errorParameter);
-                case ErrorCode.MissingInteger:
-                    return string.Format(
-                        "Could not find integer parameter for -{0}.",
-                        errorArgumentId);
-            }
-            return "";
-        }
-
-        private string UnexpectedArgumentMessage()
-        {
-            var message = new StringBuilder("Argument(s) -");
-            foreach (var c in unexpectedArguments)
-            {
-                message.Append(c);
-            }
-            message.Append(" unexpected.");
-            return message.ToString();
-        }
-
-        private static bool FalseIfNull(bool? b)
-        {
-            return b != null && b.Value;
-        }
-
-        private static int ZeroIfNull(int? i)
-        {
-            return i == null ? 0 : i.Value;
-        }
-
-        private static string BlankIfNull(string s)
-        {
-            return s ?? "";
-        }
-
-        public string GetString(char arg)
-        {
-            return BlankIfNull(stringArgs.ContainsKey(arg) ? stringArgs[arg] : null);
-        }
-
-        public int GetInt(char arg)
-        {
-            return ZeroIfNull(intArgs.ContainsKey(arg) ? intArgs[arg] : (int?)null);
-        }
-
-        public bool GetBoolean(char arg)
-        {
-            return FalseIfNull(booleanArgs.ContainsKey(arg) ? booleanArgs[arg] : (bool?)null);
         }
 
         public bool Has(char arg)
@@ -320,13 +101,34 @@ namespace ConsoleApplication
             return argsFound.Contains(arg);
         }
 
-        public bool IsValid()
+        public int NextArgument()
         {
-            return valid;
+            return currentArgument.NextIndex();
         }
-    }
 
-    class ArgsException : Exception
-    {
+        public bool GetBoolean(char arg)
+        {
+            return BooleanArgumentMarshaler.GetValue(marshalers[arg]);
+        }
+
+        public String GetString(char arg)
+        {
+            return StringArgumentMarshaler.GetValue(marshalers[arg]);
+        }
+
+        public int GetInt(char arg)
+        {
+            return IntegerArgumentMarshaler.GetValue(marshalers[arg]);
+        }
+
+        public double GetDouble(char arg)
+        {
+            return DoubleArgumentMarshaler.GetValue(marshalers[arg]);
+        }
+
+        public String[] GetStringArray(char arg)
+        {
+            return StringArrayArgumentMarshaler.GetValue(marshalers[arg]);
+        }
     }
 }
