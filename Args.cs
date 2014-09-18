@@ -215,7 +215,7 @@ namespace ConsoleApplication
             currentArgument++;
             try
             {
-                stringArgs[argChar].SetString(args[currentArgument]);
+                stringArgs[argChar].Set(args[currentArgument]);
             }
             catch (IndexOutOfRangeException)
             {
@@ -308,7 +308,7 @@ namespace ConsoleApplication
         {
             return BlankIfNull(
                 stringArgs.ContainsKey(arg)
-                    ? stringArgs[arg].GetString()
+                    ? (string)stringArgs[arg].Get()
                     : null);
         }
 
@@ -340,22 +340,11 @@ namespace ConsoleApplication
 
         private abstract class ArgumentMarshaler
         {
-            private string stringValue;
             private int intValue;
-
-            public void SetString(string value)
-            {
-                stringValue = value;
-            }
 
             public void SetInt(int value)
             {
                 intValue = value;
-            }
-
-            public string GetString()
-            {
-                return stringValue;
             }
 
             public int GetInt()
@@ -390,6 +379,17 @@ namespace ConsoleApplication
 
         private class StringArgumentMarshaler : ArgumentMarshaler
         {
+            private string stringValue;
+
+            public override void Set(string value)
+            {
+                stringValue = value;
+            }
+
+            public override object Get()
+            {
+                return stringValue;
+            }
         }
 
         private class IntArgumentMarshaler : ArgumentMarshaler
