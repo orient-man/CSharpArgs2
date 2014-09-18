@@ -10,8 +10,8 @@ namespace ConsoleApplication
         private readonly string[] args;
         private readonly IEnumerator<string> currentArgument;
 
-        private readonly IDictionary<char, ArgumentMarshaler> marshalers =
-            new Dictionary<char, ArgumentMarshaler>();
+        private readonly IDictionary<char, IArgumentMarshaler> marshalers =
+            new Dictionary<char, IArgumentMarshaler>();
 
         private readonly HashSet<char> argsFound = new HashSet<char>();
 
@@ -124,27 +124,8 @@ namespace ConsoleApplication
             if (m == null)
                 return false;
 
-            if (m is BoolArgumentMarshaler)
-                m.Set(currentArgument);
-            else if (m is StringArgumentMarshaler)
-                SetStringArg(m, currentArgument);
-            else if (m is IntArgumentMarshaler)
-                m.Set(currentArgument);
-
+            m.Set(currentArgument);
             return true;
-        }
-
-        private void SetStringArg(ArgumentMarshaler m, IEnumerator<string> argument)
-        {
-            try
-            {
-                currentArgument.MoveNext();
-                m.Set(currentArgument.Current);
-            }
-            catch (InvalidOperationException)
-            {
-                throw new ArgsException(ErrorCode.MissingString);
-            }
         }
 
         public int Cardinality()
@@ -201,9 +182,9 @@ namespace ConsoleApplication
             }
         }
 
-        private ArgumentMarshaler GetMarshaler(char arg)
+        private IArgumentMarshaler GetMarshaler(char arg)
         {
-            ArgumentMarshaler m;
+            IArgumentMarshaler m;
             return !marshalers.TryGetValue(arg, out m) ? null : m;
         }
 
@@ -212,60 +193,55 @@ namespace ConsoleApplication
             return argsFound.Contains(arg);
         }
 
-        private abstract class ArgumentMarshaler
+        private interface IArgumentMarshaler
         {
-            public abstract void Set(string value);
-            public abstract void Set(IEnumerator<string> currentArgument);
-            public abstract object Get();
+            void Set(IEnumerator<string> currentArgument);
+            object Get();
         }
 
-        private class BoolArgumentMarshaler : ArgumentMarshaler
+        private class BoolArgumentMarshaler : IArgumentMarshaler
         {
             private bool boolValue;
 
-            public override void Set(string value)
-            {
-            }
-
-            public override void Set(IEnumerator<string> currentArgument)
+            public void Set(IEnumerator<string> currentArgument)
             {
                 boolValue = true;
             }
 
-            public override object Get()
+            public object Get()
             {
                 return boolValue;
             }
         }
 
-        private class StringArgumentMarshaler : ArgumentMarshaler
+        private class StringArgumentMarshaler : IArgumentMarshaler
         {
             private string stringValue;
 
-            public override void Set(string value)
+            public void Set(IEnumerator<string> currentArgument)
             {
-                stringValue = value;
+                try
+                {
+                    currentArgument.MoveNext();
+                    stringValue = currentArgument.Current;
+                }
+                catch (InvalidOperationException)
+                {
+                    throw new ArgsException(ErrorCode.MissingString);
+                }
             }
 
-            public override void Set(IEnumerator<string> currentArgument)
-            {
-            }
-
-            public override object Get()
+            public object Get()
             {
                 return stringValue;
             }
         }
 
-        private class IntArgumentMarshaler : ArgumentMarshaler
+        private class IntArgumentMarshaler : IArgumentMarshaler
         {
             private int intValue;
 
-            public override void Set(string value)
-            {
-            }
-
-            public override void Set(IEnumerator<string> currentArgument)
+            public void Set(IEnumerator<string> currentArgument)
             {
                 string parameter = null;
 
@@ -285,7 +261,7 @@ namespace ConsoleApplication
                 }
             }
 
-            public override object Get()
+            public object Get()
             {
                 return intValue;
             }
