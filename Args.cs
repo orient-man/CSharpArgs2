@@ -233,7 +233,7 @@ namespace ConsoleApplication
 
         private void SetBooleanArg(char argChar, bool value)
         {
-            booleanArgs[argChar].SetBool(value);
+            booleanArgs[argChar].Set("true");
         }
 
         private bool IsBooleanArg(char argChar)
@@ -340,14 +340,9 @@ namespace ConsoleApplication
 
         private abstract class ArgumentMarshaler
         {
-            private bool boolValue = false;
+            protected bool boolValue = false;
             private string stringValue;
             private int intValue;
-
-            public void SetBool(bool value)
-            {
-                boolValue = value;
-            }
 
             public void SetString(string value)
             {
@@ -373,10 +368,18 @@ namespace ConsoleApplication
             {
                 return intValue;
             }
+
+            public virtual void Set(string value)
+            {
+            }
         }
 
         private class BoolArgumentMarshaler : ArgumentMarshaler
         {
+            public override void Set(string value)
+            {
+                boolValue = true;
+            }
         }
 
         private class StringArgumentMarshaler : ArgumentMarshaler
