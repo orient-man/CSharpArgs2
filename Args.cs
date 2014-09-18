@@ -129,31 +129,9 @@ namespace ConsoleApplication
             else if (m is StringArgumentMarshaler)
                 SetStringArg(m, currentArgument);
             else if (m is IntArgumentMarshaler)
-                SetIntArg(m, currentArgument);
+                m.Set(currentArgument);
 
             return true;
-        }
-
-        private void SetIntArg(ArgumentMarshaler m, IEnumerator<string> argument)
-        {
-            string parameter = null;
-
-            try
-            {
-                currentArgument.MoveNext();
-                parameter = currentArgument.Current;
-                m.Set(parameter);
-            }
-            catch (InvalidOperationException)
-            {
-                throw new ArgsException(ErrorCode.MissingInteger);
-            }
-            catch (ArgsException e)
-            {
-                e.ErrorParameter = parameter;
-                e.ErrorCode = ErrorCode.InvalidInteger;
-                throw;
-            }
         }
 
         private void SetStringArg(ArgumentMarshaler m, IEnumerator<string> argument)
@@ -285,18 +263,26 @@ namespace ConsoleApplication
 
             public override void Set(string value)
             {
-                try
-                {
-                    intValue = Int32.Parse(value);
-                }
-                catch (FormatException)
-                {
-                    throw new ArgsException();
-                }
             }
 
             public override void Set(IEnumerator<string> currentArgument)
             {
+                string parameter = null;
+
+                try
+                {
+                    currentArgument.MoveNext();
+                    parameter = currentArgument.Current;
+                    intValue = Int32.Parse(parameter);
+                }
+                catch (InvalidOperationException)
+                {
+                    throw new ArgsException(ErrorCode.MissingInteger);
+                }
+                catch (FormatException)
+                {
+                    throw new ArgsException(parameter, ErrorCode.InvalidInteger);
+                }
             }
 
             public override object Get()
