@@ -324,8 +324,8 @@ namespace ConsoleApplication
         {
             return FalseIfNull(
                 booleanArgs.ContainsKey(arg)
-                    ? booleanArgs[arg].GetBool()
-                    : (bool?)null);
+                    ? (bool?)booleanArgs[arg].Get()
+                    : null);
         }
 
         public bool Has(char arg)
@@ -340,7 +340,6 @@ namespace ConsoleApplication
 
         private abstract class ArgumentMarshaler
         {
-            protected bool boolValue = false;
             private string stringValue;
             private int intValue;
 
@@ -352,11 +351,6 @@ namespace ConsoleApplication
             public void SetInt(int value)
             {
                 intValue = value;
-            }
-
-            public bool GetBool()
-            {
-                return boolValue;
             }
 
             public string GetString()
@@ -372,13 +366,25 @@ namespace ConsoleApplication
             public virtual void Set(string value)
             {
             }
+
+            public virtual object Get()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class BoolArgumentMarshaler : ArgumentMarshaler
         {
+            private bool boolValue;
+
             public override void Set(string value)
             {
                 boolValue = true;
+            }
+
+            public override object Get()
+            {
+                return boolValue;
             }
         }
 
