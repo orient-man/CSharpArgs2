@@ -21,6 +21,13 @@ namespace ConsoleApplication
         }
 
         [Test]
+        public void GetIntWhenArgumentNotPresentThrows()
+        {
+            var args = new Args("x", new[] { "-x" });
+            Assert.Throws<ArgsException>(() => args.GetInt('x'));
+        }
+
+        [Test]
         public void TestSimpleStringPresent()
         {
             var args = new Args("x*", new[] { "-x", "param" });

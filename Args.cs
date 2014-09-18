@@ -14,9 +14,6 @@ namespace ConsoleApplication
         private readonly Dictionary<char, ArgumentMarshaler> stringArgs =
             new Dictionary<char, ArgumentMarshaler>();
 
-        private readonly Dictionary<char, ArgumentMarshaler> intArgs =
-            new Dictionary<char, ArgumentMarshaler>();
-
         private readonly IDictionary<char, ArgumentMarshaler> marshalers =
             new Dictionary<char, ArgumentMarshaler>();
 
@@ -109,7 +106,7 @@ namespace ConsoleApplication
 
         private void ParseIntegerSchemaElement(char elementId)
         {
-            marshalers[elementId] = intArgs[elementId] = new IntArgumentMarshaler();
+            marshalers[elementId] = new IntArgumentMarshaler();
         }
 
         private void ParseStringSchemaElement(char elementId)
@@ -168,9 +165,7 @@ namespace ConsoleApplication
 
         private bool SetArgument(char argChar)
         {
-            ArgumentMarshaler m;
-            if (!marshalers.TryGetValue(argChar, out m))
-                return true;
+            var m = GetMarshaler(argChar);
 
             try
             {
@@ -281,11 +276,6 @@ namespace ConsoleApplication
             return message.ToString();
         }
 
-        private static int ZeroIfNull(int? i)
-        {
-            return i == null ? 0 : i.Value;
-        }
-
         private static string BlankIfNull(string s)
         {
             return s ?? "";
@@ -301,26 +291,36 @@ namespace ConsoleApplication
 
         public int GetInt(char arg)
         {
-            return ZeroIfNull(
-                intArgs.ContainsKey(arg)
-                    ? (int?)intArgs[arg].Get()
-                    : null);
-        }
-
-        public bool GetBoolean(char arg)
-        {
-            ArgumentMarshaler m;
-            if (!marshalers.TryGetValue(arg, out m))
-                return false;
+            var m = GetMarshaler(arg);
 
             try
             {
-                return (bool)m.Get();
+                return m != null ? (int)m.Get() : 0;
             }
             catch (InvalidCastException)
             {
                 throw new ArgsException();
             }
+        }
+
+        public bool GetBoolean(char arg)
+        {
+            var m = GetMarshaler(arg);
+
+            try
+            {
+                return m != null && (bool)m.Get();
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgsException();
+            }
+        }
+
+        private ArgumentMarshaler GetMarshaler(char arg)
+        {
+            ArgumentMarshaler m;
+            return !marshalers.TryGetValue(arg, out m) ? null : m;
         }
 
         public bool Has(char arg)
