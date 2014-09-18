@@ -175,63 +175,65 @@ namespace ConsoleApplication
             if (!marshalers.TryGetValue(argChar, out m))
                 return true;
 
-            if (m is BoolArgumentMarshaler)
-                SetBooleanArg(argChar, true);
-            else if (m is StringArgumentMarshaler)
-                SetStringArg(argChar);
-            else if (m is IntArgumentMarshaler)
-                SetIntArg(argChar);
-            else
-                return false;
-
+            try
+            {
+                if (m is BoolArgumentMarshaler)
+                    SetBooleanArg(m);
+                else if (m is StringArgumentMarshaler)
+                    SetStringArg(m);
+                else if (m is IntArgumentMarshaler)
+                    SetIntArg(m);
+                else
+                    return false;
+            }
+            catch (ArgsException)
+            {
+                valid = false;
+                errorArgumentId = argChar;
+                throw;
+            }
             return true;
         }
 
-        private void SetIntArg(char argChar)
+        private void SetIntArg(ArgumentMarshaler m)
         {
             currentArgument++;
             string parameter = null;
             try
             {
                 parameter = args[currentArgument];
-                intArgs[argChar].Set(parameter);
+                m.Set(parameter);
             }
             catch (IndexOutOfRangeException)
             {
-                valid = false;
-                errorArgumentId = argChar;
                 errorCode = ErrorCode.MissingInteger;
                 throw new ArgsException();
             }
             catch (ArgsException)
             {
-                valid = false;
-                errorArgumentId = argChar;
                 errorParameter = parameter;
                 errorCode = ErrorCode.InvalidInteger;
                 throw;
             }
         }
 
-        private void SetStringArg(char argChar)
+        private void SetStringArg(ArgumentMarshaler m)
         {
             currentArgument++;
             try
             {
-                stringArgs[argChar].Set(args[currentArgument]);
+                m.Set(args[currentArgument]);
             }
             catch (IndexOutOfRangeException)
             {
-                valid = false;
-                errorArgumentId = argChar;
                 errorCode = ErrorCode.MissingString;
                 throw new ArgsException();
             }
         }
 
-        private void SetBooleanArg(char argChar, bool value)
+        private void SetBooleanArg(ArgumentMarshaler m)
         {
-            booleanArgs[argChar].Set("true");
+            m.Set("true");
         }
 
         public int Cardinality()
