@@ -191,7 +191,7 @@ namespace ConsoleApplication
             try
             {
                 parameter = args[currentArgument];
-                intArgs[argChar].SetInt(Int32.Parse(parameter));
+                intArgs[argChar].Set(parameter);
             }
             catch (IndexOutOfRangeException)
             {
@@ -200,13 +200,13 @@ namespace ConsoleApplication
                 errorCode = ErrorCode.MissingInteger;
                 throw new ArgsException();
             }
-            catch (FormatException)
+            catch (ArgsException)
             {
                 valid = false;
                 errorArgumentId = argChar;
                 errorParameter = parameter;
                 errorCode = ErrorCode.InvalidInteger;
-                throw new ArgsException();
+                throw;
             }
         }
 
@@ -316,8 +316,8 @@ namespace ConsoleApplication
         {
             return ZeroIfNull(
                 intArgs.ContainsKey(arg)
-                    ? intArgs[arg].GetInt()
-                    : (int?)null);
+                    ? (int?)intArgs[arg].Get()
+                    : null);
         }
 
         public bool GetBoolean(char arg)
@@ -340,26 +340,9 @@ namespace ConsoleApplication
 
         private abstract class ArgumentMarshaler
         {
-            private int intValue;
+            public abstract void Set(string value);
 
-            public void SetInt(int value)
-            {
-                intValue = value;
-            }
-
-            public int GetInt()
-            {
-                return intValue;
-            }
-
-            public virtual void Set(string value)
-            {
-            }
-
-            public virtual object Get()
-            {
-                throw new NotImplementedException();
-            }
+            public abstract object Get();
         }
 
         private class BoolArgumentMarshaler : ArgumentMarshaler
@@ -394,6 +377,24 @@ namespace ConsoleApplication
 
         private class IntArgumentMarshaler : ArgumentMarshaler
         {
+            private int intValue;
+
+            public override void Set(string value)
+            {
+                try
+                {
+                    intValue = Int32.Parse(value);
+                }
+                catch (FormatException)
+                {
+                    throw new ArgsException();
+                }
+            }
+
+            public override object Get()
+            {
+                return intValue;
+            }
         }
     }
 
