@@ -148,17 +148,17 @@ namespace ConsoleApplication
         private bool SetArgument(char argChar)
         {
             var m = GetMarshaler(argChar);
+            if (m == null)
+                return false;
 
             try
             {
                 if (m is BoolArgumentMarshaler)
-                    SetBooleanArg(m);
+                    m.Set(currentArgument);
                 else if (m is StringArgumentMarshaler)
-                    SetStringArg(m);
+                    SetStringArg(m, currentArgument);
                 else if (m is IntArgumentMarshaler)
-                    SetIntArg(m);
-                else
-                    return false;
+                    SetIntArg(m, currentArgument);
             }
             catch (ArgsException)
             {
@@ -169,7 +169,7 @@ namespace ConsoleApplication
             return true;
         }
 
-        private void SetIntArg(ArgumentMarshaler m)
+        private void SetIntArg(ArgumentMarshaler m, IEnumerator<string> argument)
         {
             string parameter = null;
 
@@ -192,7 +192,7 @@ namespace ConsoleApplication
             }
         }
 
-        private void SetStringArg(ArgumentMarshaler m)
+        private void SetStringArg(ArgumentMarshaler m, IEnumerator<string> argument)
         {
             try
             {
@@ -204,11 +204,6 @@ namespace ConsoleApplication
                 errorCode = ErrorCode.MissingString;
                 throw new ArgsException();
             }
-        }
-
-        private void SetBooleanArg(ArgumentMarshaler m)
-        {
-            m.Set("true");
         }
 
         public int Cardinality()
@@ -320,7 +315,7 @@ namespace ConsoleApplication
         private abstract class ArgumentMarshaler
         {
             public abstract void Set(string value);
-
+            public abstract void Set(IEnumerator<string> currentArgment);
             public abstract object Get();
         }
 
@@ -329,6 +324,10 @@ namespace ConsoleApplication
             private bool boolValue;
 
             public override void Set(string value)
+            {
+            }
+
+            public override void Set(IEnumerator<string> currentArgment)
             {
                 boolValue = true;
             }
@@ -346,6 +345,10 @@ namespace ConsoleApplication
             public override void Set(string value)
             {
                 stringValue = value;
+            }
+
+            public override void Set(IEnumerator<string> currentArgment)
+            {
             }
 
             public override object Get()
@@ -368,6 +371,10 @@ namespace ConsoleApplication
                 {
                     throw new ArgsException();
                 }
+            }
+
+            public override void Set(IEnumerator<string> currentArgment)
+            {
             }
 
             public override object Get()
