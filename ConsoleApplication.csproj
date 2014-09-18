@@ -47,9 +47,13 @@
     <Compile Include="Args.cs" />
     <Compile Include="ArgsException.cs" />
     <Compile Include="ArgsTests.cs" />
+    <Compile Include="BoolArgumentMarshaler.cs" />
     <Compile Include="ErrorCode.cs" />
+    <Compile Include="IArgumentMarshaler.cs" />
+    <Compile Include="IntArgumentMarshaler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StringArgumentMarshaler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
