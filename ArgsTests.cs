@@ -14,6 +14,13 @@ namespace ConsoleApplication
         }
 
         [Test]
+        public void GetBooleanWhenArgumentNotPresentThrows()
+        {
+            var args = new Args("x#", new[] { "-x", "42" });
+            Assert.Throws<ArgsException>(() => args.GetBoolean('x'));
+        }
+
+        [Test]
         public void TestSimpleStringPresent()
         {
             var args = new Args("x*", new[] { "-x", "param" });

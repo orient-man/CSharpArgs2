@@ -11,9 +11,6 @@ namespace ConsoleApplication
         private bool valid = true;
         private readonly HashSet<Char> unexpectedArguments = new HashSet<char>();
 
-        private readonly Dictionary<char, ArgumentMarshaler> booleanArgs =
-            new Dictionary<char, ArgumentMarshaler>();
-
         private readonly Dictionary<char, ArgumentMarshaler> stringArgs =
             new Dictionary<char, ArgumentMarshaler>();
 
@@ -107,7 +104,7 @@ namespace ConsoleApplication
 
         private void ParseBooleanSchemaElement(char elementId)
         {
-            marshalers[elementId] = booleanArgs[elementId] = new BoolArgumentMarshaler();
+            marshalers[elementId] = new BoolArgumentMarshaler();
         }
 
         private void ParseIntegerSchemaElement(char elementId)
@@ -284,11 +281,6 @@ namespace ConsoleApplication
             return message.ToString();
         }
 
-        private static bool FalseIfNull(bool? b)
-        {
-            return b != null && b.Value;
-        }
-
         private static int ZeroIfNull(int? i)
         {
             return i == null ? 0 : i.Value;
@@ -317,10 +309,18 @@ namespace ConsoleApplication
 
         public bool GetBoolean(char arg)
         {
-            return FalseIfNull(
-                booleanArgs.ContainsKey(arg)
-                    ? (bool?)booleanArgs[arg].Get()
-                    : null);
+            ArgumentMarshaler m;
+            if (!marshalers.TryGetValue(arg, out m))
+                return false;
+
+            try
+            {
+                return (bool)m.Get();
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgsException();
+            }
         }
 
         public bool Has(char arg)
