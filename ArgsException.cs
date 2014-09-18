@@ -4,10 +4,11 @@ namespace ConsoleApplication
 {
     class ArgsException : Exception
     {
-        private readonly char errorArgumentId;
         private readonly string errorParameter;
 
+        public char ErrorArgumentId { get; set; }
         public ErrorCode ErrorCode { get; private set; }
+
 
         public ArgsException() : this(ErrorCode.Ok)
         {
@@ -29,7 +30,7 @@ namespace ConsoleApplication
 
         private ArgsException(char errorArgumentId, string errorParameter, ErrorCode errorCode)
         {
-            this.errorArgumentId = errorArgumentId;
+            this.ErrorArgumentId = errorArgumentId;
             this.errorParameter = errorParameter;
             ErrorCode = errorCode;
         }
@@ -43,20 +44,20 @@ namespace ConsoleApplication
                 case ErrorCode.UnexpectedArgument:
                     return string.Format(
                         "Argument {0} unexpected.",
-                        errorArgumentId);
+                        ErrorArgumentId);
                 case ErrorCode.MissingString:
                     return string.Format(
                         "Could not find string parameter for -{0}.",
-                        errorArgumentId);
+                        ErrorArgumentId);
                 case ErrorCode.InvalidInteger:
                     return string.Format(
                         "Argument -{0} expects an integer but was '{1}'.",
-                        errorArgumentId,
+                        ErrorArgumentId,
                         errorParameter);
                 case ErrorCode.MissingInteger:
                     return string.Format(
                         "Could not find integer parameter for -{0}.",
-                        errorArgumentId);
+                        ErrorArgumentId);
             }
             return "";
         }

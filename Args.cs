@@ -124,7 +124,16 @@ namespace ConsoleApplication
             if (m == null)
                 return false;
 
-            m.Set(currentArgument);
+            try
+            {
+                m.Set(currentArgument);
+            }
+            catch (ArgsException e)
+            {
+                e.ErrorArgumentId = argChar;
+                throw;
+            }
+
             return true;
         }
 

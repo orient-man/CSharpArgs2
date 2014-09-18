@@ -54,9 +54,9 @@ namespace ConsoleApplication
             catch (ArgsException e)
             {
                 Assert.AreEqual(ErrorCode.MissingString, e.ErrorCode);
-                Assert.That(
+                Assert.AreEqual(
                     e.ErrorMessage(),
-                    Is.StringContaining("Could not find string parameter"));
+                    "Could not find string parameter for -x.");
             }
         }
 
@@ -89,9 +89,9 @@ namespace ConsoleApplication
             catch (ArgsException e)
             {
                 Assert.AreEqual(ErrorCode.InvalidInteger, e.ErrorCode);
-                Assert.That(
+                Assert.AreEqual(
                     e.ErrorMessage(),
-                    Is.StringContaining("expects an integer but was"));
+                    "Argument -x expects an integer but was 'Forty two'.");
             }
         }
 
@@ -106,9 +106,9 @@ namespace ConsoleApplication
             catch (ArgsException e)
             {
                 Assert.AreEqual(ErrorCode.MissingInteger, e.ErrorCode);
-                Assert.That(
+                Assert.AreEqual(
                     e.ErrorMessage(),
-                    Is.StringContaining("Could not find integer parameter"));
+                    "Could not find integer parameter for -x.");
             }
         }
 
