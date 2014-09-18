@@ -315,7 +315,7 @@ namespace ConsoleApplication
         private abstract class ArgumentMarshaler
         {
             public abstract void Set(string value);
-            public abstract void Set(IEnumerator<string> currentArgment);
+            public abstract void Set(IEnumerator<string> currentArgument);
             public abstract object Get();
         }
 
@@ -327,7 +327,7 @@ namespace ConsoleApplication
             {
             }
 
-            public override void Set(IEnumerator<string> currentArgment)
+            public override void Set(IEnumerator<string> currentArgument)
             {
                 boolValue = true;
             }
@@ -347,7 +347,7 @@ namespace ConsoleApplication
                 stringValue = value;
             }
 
-            public override void Set(IEnumerator<string> currentArgment)
+            public override void Set(IEnumerator<string> currentArgument)
             {
             }
 
@@ -373,7 +373,7 @@ namespace ConsoleApplication
                 }
             }
 
-            public override void Set(IEnumerator<string> currentArgment)
+            public override void Set(IEnumerator<string> currentArgument)
             {
             }
 
