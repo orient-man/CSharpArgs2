@@ -11,8 +11,8 @@ namespace ConsoleApplication
         private bool valid = true;
         private readonly HashSet<Char> unexpectedArguments = new HashSet<char>();
 
-        private readonly Dictionary<char, bool> booleanArgs =
-            new Dictionary<char, bool>();
+        private readonly Dictionary<char, ArgumentMarshaler> booleanArgs =
+            new Dictionary<char, ArgumentMarshaler>();
 
         private readonly Dictionary<char, string> stringArgs = new Dictionary<char, string>();
         private readonly Dictionary<char, int> intArgs = new Dictionary<char, int>();
@@ -100,7 +100,7 @@ namespace ConsoleApplication
 
         private void ParseBooleanSchemaElement(char elementId)
         {
-            booleanArgs[elementId] = false;
+            booleanArgs[elementId] = new BoolArgumentMarshaler();
         }
 
         private void ParseIntegerSchemaElement(char elementId)
@@ -229,7 +229,7 @@ namespace ConsoleApplication
 
         private void SetBooleanArg(char argChar, bool value)
         {
-            booleanArgs[argChar] = value;
+            booleanArgs[argChar].SetBool(value);
         }
 
         private bool IsBooleanArg(char argChar)
@@ -312,7 +312,10 @@ namespace ConsoleApplication
 
         public bool GetBoolean(char arg)
         {
-            return FalseIfNull(booleanArgs.ContainsKey(arg) ? booleanArgs[arg] : (bool?)null);
+            return FalseIfNull(
+                booleanArgs.ContainsKey(arg)
+                    ? booleanArgs[arg].GetBool()
+                    : (bool?)null);
         }
 
         public bool Has(char arg)
@@ -323,6 +326,33 @@ namespace ConsoleApplication
         public bool IsValid()
         {
             return valid;
+        }
+
+        private abstract class ArgumentMarshaler
+        {
+            private bool boolValue = false;
+
+            public void SetBool(bool value)
+            {
+                boolValue = value;
+            }
+
+            public bool GetBool()
+            {
+                return boolValue;
+            }
+        }
+
+        private class BoolArgumentMarshaler : ArgumentMarshaler
+        {
+        }
+
+        private class StringArgumentMarshaler : ArgumentMarshaler
+        {
+        }
+
+        private class IntArgumentMarshaler : ArgumentMarshaler
+        {
         }
     }
 
