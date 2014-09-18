@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace ConsoleApplication
@@ -8,6 +9,7 @@ namespace ConsoleApplication
     {
         private readonly string schema;
         private readonly string[] args;
+        private readonly IEnumerator<string> currentArgument;
         private bool valid = true;
         private readonly HashSet<Char> unexpectedArguments = new HashSet<char>();
 
@@ -15,7 +17,6 @@ namespace ConsoleApplication
             new Dictionary<char, ArgumentMarshaler>();
 
         private readonly HashSet<char> argsFound = new HashSet<char>();
-        private int currentArgument;
         private char errorArgumentId = '\0';
         private string errorParameter = "TILT";
         private ErrorCode errorCode = ErrorCode.Ok;
@@ -33,6 +34,7 @@ namespace ConsoleApplication
         {
             this.schema = schema;
             this.args = args;
+            currentArgument = args.AsEnumerable().GetEnumerator();
             valid = Parse();
         }
 
@@ -111,9 +113,9 @@ namespace ConsoleApplication
 
         private bool ParseArguments()
         {
-            for (currentArgument = 0; currentArgument < args.Length; currentArgument++)
+            while (currentArgument.MoveNext())
             {
-                var arg = args[currentArgument];
+                var arg = currentArgument.Current;
                 ParseArgument(arg);
             }
             return true;
@@ -169,14 +171,15 @@ namespace ConsoleApplication
 
         private void SetIntArg(ArgumentMarshaler m)
         {
-            currentArgument++;
             string parameter = null;
+
             try
             {
-                parameter = args[currentArgument];
+                currentArgument.MoveNext();
+                parameter = currentArgument.Current;
                 m.Set(parameter);
             }
-            catch (IndexOutOfRangeException)
+            catch (InvalidOperationException)
             {
                 errorCode = ErrorCode.MissingInteger;
                 throw new ArgsException();
@@ -191,12 +194,12 @@ namespace ConsoleApplication
 
         private void SetStringArg(ArgumentMarshaler m)
         {
-            currentArgument++;
             try
             {
-                m.Set(args[currentArgument]);
+                currentArgument.MoveNext();
+                m.Set(currentArgument.Current);
             }
-            catch (IndexOutOfRangeException)
+            catch (InvalidOperationException)
             {
                 errorCode = ErrorCode.MissingString;
                 throw new ArgsException();
