@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ConsoleApplication
 {
@@ -10,50 +9,30 @@ namespace ConsoleApplication
         private readonly string schema;
         private readonly string[] args;
         private readonly IEnumerator<string> currentArgument;
-        private bool valid = true;
-        private readonly HashSet<Char> unexpectedArguments = new HashSet<char>();
 
         private readonly IDictionary<char, ArgumentMarshaler> marshalers =
             new Dictionary<char, ArgumentMarshaler>();
 
         private readonly HashSet<char> argsFound = new HashSet<char>();
-        private char errorArgumentId = '\0';
-        private string errorParameter = "TILT";
-        private ErrorCode errorCode = ErrorCode.Ok;
-
-        private enum ErrorCode
-        {
-            Ok,
-            MissingString,
-            MissingInteger,
-            InvalidInteger,
-            UnexpectedArgument
-        }
 
         public Args(string schema, string[] args)
         {
             this.schema = schema;
             this.args = args;
             currentArgument = args.AsEnumerable().GetEnumerator();
-            valid = Parse();
+            Parse();
         }
 
-        private bool Parse()
+        private void Parse()
         {
             if (schema.Length == 0 && args.Length == 0)
-                return true;
+                return;
+
             ParseSchema();
-            try
-            {
-                ParseArguments();
-            }
-            catch (ArgsException)
-            {
-            }
-            return valid;
+            ParseArguments();
         }
 
-        private bool ParseSchema()
+        private void ParseSchema()
         {
             foreach (var element in schema.Split(','))
             {
@@ -63,7 +42,6 @@ namespace ConsoleApplication
                     ParseSchemaElement(trimmedElement);
                 }
             }
-            return true;
         }
 
         private void ParseSchemaElement(string element)
@@ -111,14 +89,13 @@ namespace ConsoleApplication
             return elementTail == "#";
         }
 
-        private bool ParseArguments()
+        private void ParseArguments()
         {
             while (currentArgument.MoveNext())
             {
                 var arg = currentArgument.Current;
                 ParseArgument(arg);
             }
-            return true;
         }
 
         private void ParseArgument(string arg)
@@ -138,11 +115,7 @@ namespace ConsoleApplication
             if (SetArgument(argChar))
                 argsFound.Add(argChar);
             else
-            {
-                unexpectedArguments.Add(argChar);
-                errorCode = ErrorCode.UnexpectedArgument;
-                valid = false;
-            }
+                throw new ArgsException(argChar, ErrorCode.UnexpectedArgument);
         }
 
         private bool SetArgument(char argChar)
@@ -151,21 +124,13 @@ namespace ConsoleApplication
             if (m == null)
                 return false;
 
-            try
-            {
-                if (m is BoolArgumentMarshaler)
-                    m.Set(currentArgument);
-                else if (m is StringArgumentMarshaler)
-                    SetStringArg(m, currentArgument);
-                else if (m is IntArgumentMarshaler)
-                    SetIntArg(m, currentArgument);
-            }
-            catch (ArgsException)
-            {
-                valid = false;
-                errorArgumentId = argChar;
-                throw;
-            }
+            if (m is BoolArgumentMarshaler)
+                m.Set(currentArgument);
+            else if (m is StringArgumentMarshaler)
+                SetStringArg(m, currentArgument);
+            else if (m is IntArgumentMarshaler)
+                SetIntArg(m, currentArgument);
+
             return true;
         }
 
@@ -181,13 +146,12 @@ namespace ConsoleApplication
             }
             catch (InvalidOperationException)
             {
-                errorCode = ErrorCode.MissingInteger;
-                throw new ArgsException();
+                throw new ArgsException(ErrorCode.MissingInteger);
             }
-            catch (ArgsException)
+            catch (ArgsException e)
             {
-                errorParameter = parameter;
-                errorCode = ErrorCode.InvalidInteger;
+                e.ErrorParameter = parameter;
+                e.ErrorCode = ErrorCode.InvalidInteger;
                 throw;
             }
         }
@@ -201,8 +165,7 @@ namespace ConsoleApplication
             }
             catch (InvalidOperationException)
             {
-                errorCode = ErrorCode.MissingString;
-                throw new ArgsException();
+                throw new ArgsException(ErrorCode.MissingString);
             }
         }
 
@@ -216,42 +179,6 @@ namespace ConsoleApplication
             if (schema.Length > 0)
                 return "-[" + schema + "]";
             return "";
-        }
-
-        public string ErrorMessage()
-        {
-            switch (errorCode)
-            {
-                case ErrorCode.Ok:
-                    throw new Exception("TILT: Should not get here.");
-                case ErrorCode.UnexpectedArgument:
-                    return UnexpectedArgumentMessage();
-                case ErrorCode.MissingString:
-                    return string.Format(
-                        "Could not find string parameter for -{0}.",
-                        errorArgumentId);
-                case ErrorCode.InvalidInteger:
-                    return string.Format(
-                        "Argument -{0} expects an integer but was '{1}'.",
-                        errorArgumentId,
-                        errorParameter);
-                case ErrorCode.MissingInteger:
-                    return string.Format(
-                        "Could not find integer parameter for -{0}.",
-                        errorArgumentId);
-            }
-            return "";
-        }
-
-        private string UnexpectedArgumentMessage()
-        {
-            var message = new StringBuilder("Argument(s) -");
-            foreach (var c in unexpectedArguments)
-            {
-                message.Append(c);
-            }
-            message.Append(" unexpected.");
-            return message.ToString();
         }
 
         public string GetString(char arg)
@@ -305,11 +232,6 @@ namespace ConsoleApplication
         public bool Has(char arg)
         {
             return argsFound.Contains(arg);
-        }
-
-        public bool IsValid()
-        {
-            return valid;
         }
 
         private abstract class ArgumentMarshaler
@@ -382,9 +304,5 @@ namespace ConsoleApplication
                 return intValue;
             }
         }
-    }
-
-    class ArgsException : Exception
-    {
     }
 }

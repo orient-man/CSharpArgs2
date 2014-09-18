@@ -46,11 +46,18 @@ namespace ConsoleApplication
         [Test]
         public void TestMissingStringArgument()
         {
-            var args = new Args("x*", new[] { "-x" });
-            Assert.False(args.IsValid());
-            Assert.That(
-                args.ErrorMessage(),
-                Is.StringContaining("Could not find string parameter"));
+            try
+            {
+                new Args("x*", new[] { "-x" });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.MissingString, e.ErrorCode);
+                Assert.That(
+                    e.ErrorMessage(),
+                    Is.StringContaining("Could not find string parameter"));
+            }
         }
 
         [Test]
@@ -74,21 +81,35 @@ namespace ConsoleApplication
         [Test]
         public void TestInvalidInteger()
         {
-            var args = new Args("x#", new[] { "-x", "Forty two" });
-            Assert.False(args.IsValid());
-            Assert.That(
-                args.ErrorMessage(),
-                Is.StringContaining("expects an integer but was"));
+            try
+            {
+                new Args("x#", new[] { "-x", "Forty two" });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.InvalidInteger, e.ErrorCode);
+                Assert.That(
+                    e.ErrorMessage(),
+                    Is.StringContaining("expects an integer but was"));
+            }
         }
 
         [Test]
         public void TestMissingInteger()
         {
-            var args = new Args("x#", new[] { "-x" });
-            Assert.False(args.IsValid());
-            Assert.That(
-                args.ErrorMessage(),
-                Is.StringContaining("Could not find integer parameter"));
+            try
+            {
+                new Args("x#", new[] { "-x" });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.MissingInteger, e.ErrorCode);
+                Assert.That(
+                    e.ErrorMessage(),
+                    Is.StringContaining("Could not find integer parameter"));
+            }
         }
 
         [Test]
