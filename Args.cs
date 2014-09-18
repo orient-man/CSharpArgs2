@@ -17,7 +17,9 @@ namespace ConsoleApplication
         private readonly Dictionary<char, ArgumentMarshaler> stringArgs =
             new Dictionary<char, ArgumentMarshaler>();
 
-        private readonly Dictionary<char, int> intArgs = new Dictionary<char, int>();
+        private readonly Dictionary<char, ArgumentMarshaler> intArgs =
+            new Dictionary<char, ArgumentMarshaler>();
+
         private readonly HashSet<char> argsFound = new HashSet<char>();
         private int currentArgument;
         private char errorArgumentId = '\0';
@@ -107,7 +109,7 @@ namespace ConsoleApplication
 
         private void ParseIntegerSchemaElement(char elementId)
         {
-            intArgs[elementId] = 0;
+            intArgs[elementId] = new IntArgumentMarshaler();
         }
 
         private void ParseStringSchemaElement(char elementId)
@@ -189,7 +191,7 @@ namespace ConsoleApplication
             try
             {
                 parameter = args[currentArgument];
-                intArgs[argChar] = Int32.Parse(parameter);
+                intArgs[argChar].SetInt(Int32.Parse(parameter));
             }
             catch (IndexOutOfRangeException)
             {
@@ -312,7 +314,10 @@ namespace ConsoleApplication
 
         public int GetInt(char arg)
         {
-            return ZeroIfNull(intArgs.ContainsKey(arg) ? intArgs[arg] : (int?)null);
+            return ZeroIfNull(
+                intArgs.ContainsKey(arg)
+                    ? intArgs[arg].GetInt()
+                    : (int?)null);
         }
 
         public bool GetBoolean(char arg)
@@ -337,6 +342,7 @@ namespace ConsoleApplication
         {
             private bool boolValue = false;
             private string stringValue;
+            private int intValue;
 
             public void SetBool(bool value)
             {
@@ -348,6 +354,11 @@ namespace ConsoleApplication
                 stringValue = value;
             }
 
+            public void SetInt(int value)
+            {
+                intValue = value;
+            }
+
             public bool GetBool()
             {
                 return boolValue;
@@ -356,6 +367,11 @@ namespace ConsoleApplication
             public string GetString()
             {
                 return stringValue;
+            }
+
+            public int GetInt()
+            {
+                return intValue;
             }
         }
 
