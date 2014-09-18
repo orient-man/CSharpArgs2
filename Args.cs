@@ -20,6 +20,9 @@ namespace ConsoleApplication
         private readonly Dictionary<char, ArgumentMarshaler> intArgs =
             new Dictionary<char, ArgumentMarshaler>();
 
+        private readonly IDictionary<char, ArgumentMarshaler> marshalers =
+            new Dictionary<char, ArgumentMarshaler>();
+
         private readonly HashSet<char> argsFound = new HashSet<char>();
         private int currentArgument;
         private char errorArgumentId = '\0';
@@ -104,17 +107,17 @@ namespace ConsoleApplication
 
         private void ParseBooleanSchemaElement(char elementId)
         {
-            booleanArgs[elementId] = new BoolArgumentMarshaler();
+            marshalers[elementId] = booleanArgs[elementId] = new BoolArgumentMarshaler();
         }
 
         private void ParseIntegerSchemaElement(char elementId)
         {
-            intArgs[elementId] = new IntArgumentMarshaler();
+            marshalers[elementId] = intArgs[elementId] = new IntArgumentMarshaler();
         }
 
         private void ParseStringSchemaElement(char elementId)
         {
-            stringArgs[elementId] = new StringArgumentMarshaler();
+            marshalers[elementId] = stringArgs[elementId] = new StringArgumentMarshaler();
         }
 
         private static bool IsStringSchemaElement(string elementTail)
@@ -168,20 +171,20 @@ namespace ConsoleApplication
 
         private bool SetArgument(char argChar)
         {
-            if (IsBooleanArg(argChar))
+            ArgumentMarshaler m;
+            if (!marshalers.TryGetValue(argChar, out m))
+                return true;
+
+            if (m is BoolArgumentMarshaler)
                 SetBooleanArg(argChar, true);
-            else if (IsStringArg(argChar))
+            else if (m is StringArgumentMarshaler)
                 SetStringArg(argChar);
-            else if (IsIntArg(argChar))
+            else if (m is IntArgumentMarshaler)
                 SetIntArg(argChar);
             else
                 return false;
-            return true;
-        }
 
-        private bool IsIntArg(char argChar)
-        {
-            return intArgs.ContainsKey(argChar);
+            return true;
         }
 
         private void SetIntArg(char argChar)
@@ -226,19 +229,9 @@ namespace ConsoleApplication
             }
         }
 
-        private bool IsStringArg(char argChar)
-        {
-            return stringArgs.ContainsKey(argChar);
-        }
-
         private void SetBooleanArg(char argChar, bool value)
         {
             booleanArgs[argChar].Set("true");
-        }
-
-        private bool IsBooleanArg(char argChar)
-        {
-            return booleanArgs.ContainsKey(argChar);
         }
 
         public int Cardinality()
