@@ -14,7 +14,9 @@ namespace ConsoleApplication
         private readonly Dictionary<char, ArgumentMarshaler> booleanArgs =
             new Dictionary<char, ArgumentMarshaler>();
 
-        private readonly Dictionary<char, string> stringArgs = new Dictionary<char, string>();
+        private readonly Dictionary<char, ArgumentMarshaler> stringArgs =
+            new Dictionary<char, ArgumentMarshaler>();
+
         private readonly Dictionary<char, int> intArgs = new Dictionary<char, int>();
         private readonly HashSet<char> argsFound = new HashSet<char>();
         private int currentArgument;
@@ -110,7 +112,7 @@ namespace ConsoleApplication
 
         private void ParseStringSchemaElement(char elementId)
         {
-            stringArgs[elementId] = "";
+            stringArgs[elementId] = new StringArgumentMarshaler();
         }
 
         private static bool IsStringSchemaElement(string elementTail)
@@ -211,7 +213,7 @@ namespace ConsoleApplication
             currentArgument++;
             try
             {
-                stringArgs[argChar] = args[currentArgument];
+                stringArgs[argChar].SetString(args[currentArgument]);
             }
             catch (IndexOutOfRangeException)
             {
@@ -302,7 +304,10 @@ namespace ConsoleApplication
 
         public string GetString(char arg)
         {
-            return BlankIfNull(stringArgs.ContainsKey(arg) ? stringArgs[arg] : null);
+            return BlankIfNull(
+                stringArgs.ContainsKey(arg)
+                    ? stringArgs[arg].GetString()
+                    : null);
         }
 
         public int GetInt(char arg)
@@ -331,15 +336,26 @@ namespace ConsoleApplication
         private abstract class ArgumentMarshaler
         {
             private bool boolValue = false;
+            private string stringValue;
 
             public void SetBool(bool value)
             {
                 boolValue = value;
             }
 
+            public void SetString(string value)
+            {
+                stringValue = value;
+            }
+
             public bool GetBool()
             {
                 return boolValue;
+            }
+
+            public string GetString()
+            {
+                return stringValue;
             }
         }
 
