@@ -11,9 +11,6 @@ namespace ConsoleApplication
         private bool valid = true;
         private readonly HashSet<Char> unexpectedArguments = new HashSet<char>();
 
-        private readonly Dictionary<char, ArgumentMarshaler> stringArgs =
-            new Dictionary<char, ArgumentMarshaler>();
-
         private readonly IDictionary<char, ArgumentMarshaler> marshalers =
             new Dictionary<char, ArgumentMarshaler>();
 
@@ -73,13 +70,11 @@ namespace ConsoleApplication
             var elementTail = element.Substring(1);
             ValidateSchemaElementId(elementId);
             if (IsBooleanSchemaElement(elementTail))
-                ParseBooleanSchemaElement(elementId);
+                marshalers[elementId] = new BoolArgumentMarshaler();
             else if (IsStringSchemaElement(elementTail))
-                ParseStringSchemaElement(elementId);
+                marshalers[elementId] = new StringArgumentMarshaler();
             else if (IsIntegerSchemaElement(elementTail))
-            {
-                ParseIntegerSchemaElement(elementId);
-            }
+                marshalers[elementId] = new IntArgumentMarshaler();
             else
             {
                 throw new ArgumentException(
@@ -97,21 +92,6 @@ namespace ConsoleApplication
                 throw new ArgumentException(
                     "Bad character:" + elementId + "in Args format: " + schema);
             }
-        }
-
-        private void ParseBooleanSchemaElement(char elementId)
-        {
-            marshalers[elementId] = new BoolArgumentMarshaler();
-        }
-
-        private void ParseIntegerSchemaElement(char elementId)
-        {
-            marshalers[elementId] = new IntArgumentMarshaler();
-        }
-
-        private void ParseStringSchemaElement(char elementId)
-        {
-            marshalers[elementId] = stringArgs[elementId] = new StringArgumentMarshaler();
         }
 
         private static bool IsStringSchemaElement(string elementTail)
@@ -276,17 +256,18 @@ namespace ConsoleApplication
             return message.ToString();
         }
 
-        private static string BlankIfNull(string s)
-        {
-            return s ?? "";
-        }
-
         public string GetString(char arg)
         {
-            return BlankIfNull(
-                stringArgs.ContainsKey(arg)
-                    ? (string)stringArgs[arg].Get()
-                    : null);
+            var m = GetMarshaler(arg);
+
+            try
+            {
+                return m != null ? (string)m.Get() : "";
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgsException();
+            }
         }
 
         public int GetInt(char arg)
