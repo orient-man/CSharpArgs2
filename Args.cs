@@ -57,11 +57,10 @@ namespace ConsoleApplication
                 marshalers[elementId] = new IntArgumentMarshaler();
             else
             {
-                throw new ArgumentException(
-                    string.Format(
-                        "Argument: {0} has invalid format: {1}.",
-                        elementId,
-                        elementTail));
+                throw new ArgsException(
+                    ErrorCode.InvalidArgumentFormat,
+                    elementId,
+                    elementTail);
             }
         }
 

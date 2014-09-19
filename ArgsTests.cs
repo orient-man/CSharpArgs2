@@ -6,6 +6,21 @@ namespace ConsoleApplication
     public class ArgsTests
     {
         [Test]
+        public void TestInvalidArgumentFormat()
+        {
+            try
+            {
+                new Args("f~", new string[] { });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.InvalidArgumentFormat, e.ErrorCode);
+                Assert.AreEqual('f', e.ErrorArgumentId);
+            }
+        }
+
+        [Test]
         public void TestSimpleBooleanPresent()
         {
             var args = new Args("x", new[] { "-x" });

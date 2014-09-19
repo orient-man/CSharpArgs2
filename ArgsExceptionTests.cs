@@ -32,5 +32,12 @@ namespace ConsoleApplication
             var e = new ArgsException(ErrorCode.MissingInteger, 'x');
             Assert.AreEqual("Could not find integer parameter for -x.", e.GetErrorMessage());
         }
+
+        [Test]
+        public void TestInvalidFormat()
+        {
+            var e = new ArgsException(ErrorCode.InvalidArgumentFormat, 'x', "$");
+            Assert.AreEqual("'$' is not a valid argument format.", e.GetErrorMessage());
+        }
     }
 }
