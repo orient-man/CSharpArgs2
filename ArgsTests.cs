@@ -6,6 +6,21 @@ namespace ConsoleApplication
     public class ArgsTests
     {
         [Test]
+        public void TestNonLetterSchema()
+        {
+            try
+            {
+                new Args("*", new string[] { });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.InvalidArgumentName, e.ErrorCode);
+                Assert.AreEqual('*', e.ErrorArgumentId);
+            }
+        }
+
+        [Test]
         public void TestInvalidArgumentFormat()
         {
             try

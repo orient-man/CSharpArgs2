@@ -64,13 +64,10 @@ namespace ConsoleApplication
             }
         }
 
-        private void ValidateSchemaElementId(char elementId)
+        private static void ValidateSchemaElementId(char elementId)
         {
             if (!char.IsLetter(elementId))
-            {
-                throw new ArgumentException(
-                    "Bad character:" + elementId + "in Args format: " + schema);
-            }
+                throw new ArgsException(ErrorCode.InvalidArgumentName, elementId);
         }
 
         private static bool IsStringSchemaElement(string elementTail)

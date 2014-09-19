@@ -42,6 +42,10 @@ namespace ConsoleApplication
                     return string.Format(
                         "Could not find integer parameter for -{0}.",
                         ErrorArgumentId);
+                case ErrorCode.InvalidArgumentName:
+                    return String.Format(
+                        "'{0}' is not a valid argument name.",
+                        ErrorArgumentId);
                 case ErrorCode.InvalidArgumentFormat:
                     return String.Format(
                         "'{0}' is not a valid argument format.",

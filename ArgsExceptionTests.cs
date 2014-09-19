@@ -34,6 +34,13 @@ namespace ConsoleApplication
         }
 
         [Test]
+        public void TestInvalidArgumentName()
+        {
+            var e = new ArgsException(ErrorCode.InvalidArgumentName, '#');
+            Assert.AreEqual("'#' is not a valid argument name.", e.GetErrorMessage());
+        }
+
+        [Test]
         public void TestInvalidFormat()
         {
             var e = new ArgsException(ErrorCode.InvalidArgumentFormat, 'x', "$");
