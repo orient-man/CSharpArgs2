@@ -44,24 +44,27 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void GetBooleanWhenArgumentNotPresentThrows()
+        public void WhenArgumentNotPresentGetBooleanReturnsFalse()
         {
             var args = new Args("x#", new[] { "-x", "42" });
-            Assert.Throws<ArgsException>(() => args.GetBoolean('x'));
+            Assert.AreEqual(false, args.GetBoolean('x'));
+            Assert.AreEqual(1, args.Cardinality());
         }
 
         [Test]
-        public void GetIntWhenArgumentNotPresentThrows()
+        public void WhenArgumentNotPresentGetIntReturnsZero()
         {
             var args = new Args("x", new[] { "-x" });
-            Assert.Throws<ArgsException>(() => args.GetInt('x'));
+            Assert.AreEqual(0, args.GetInt('x'));
+            Assert.AreEqual(1, args.Cardinality());
         }
 
         [Test]
-        public void GetStringWhenArgumentNotPresentThrows()
+        public void WhenArgumentNotPresentGetStringReturnEmptyString()
         {
             var args = new Args("x", new[] { "-x" });
-            Assert.Throws<ArgsException>(() => args.GetString('x'));
+            Assert.AreEqual("", args.GetString('x'));
+            Assert.AreEqual(1, args.Cardinality());
         }
 
         [Test]
