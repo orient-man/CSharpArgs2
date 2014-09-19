@@ -115,7 +115,7 @@ namespace ConsoleApplication
             if (SetArgument(argChar))
                 argsFound.Add(argChar);
             else
-                throw new ArgsException(argChar, ErrorCode.UnexpectedArgument);
+                throw new ArgsException(ErrorCode.UnexpectedArgument, argChar);
         }
 
         private bool SetArgument(char argChar)

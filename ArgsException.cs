@@ -9,33 +9,17 @@ namespace ConsoleApplication
         public char ErrorArgumentId { get; set; }
         public ErrorCode ErrorCode { get; private set; }
 
-
-        public ArgsException() : this(ErrorCode.Ok)
+        public ArgsException(
+            ErrorCode errorCode = ErrorCode.Ok,
+            char errorArgumentId = '\0',
+            string errorParameter = null)
         {
-        }
-
-        public ArgsException(ErrorCode errorCode) : this('\0', "TILT", errorCode)
-        {
-        }
-
-        public ArgsException(string errorParameter, ErrorCode errorCode)
-            : this('\0', errorParameter, errorCode)
-        {
-        }
-
-        public ArgsException(char errorArgumentId, ErrorCode errorCode)
-            : this(errorArgumentId, "TILT", errorCode)
-        {
-        }
-
-        private ArgsException(char errorArgumentId, string errorParameter, ErrorCode errorCode)
-        {
+            this.ErrorCode = errorCode;
             this.ErrorArgumentId = errorArgumentId;
-            this.errorParameter = errorParameter;
-            ErrorCode = errorCode;
+            this.errorParameter = errorParameter ?? "TILT";
         }
 
-        public string ErrorMessage()
+        public string GetErrorMessage()
         {
             switch (ErrorCode)
             {
@@ -43,7 +27,7 @@ namespace ConsoleApplication
                     throw new Exception("TILT: Should not get here.");
                 case ErrorCode.UnexpectedArgument:
                     return string.Format(
-                        "Argument {0} unexpected.",
+                        "Argument -{0} unexpected.",
                         ErrorArgumentId);
                 case ErrorCode.MissingString:
                     return string.Format(

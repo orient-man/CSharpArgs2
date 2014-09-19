@@ -23,7 +23,9 @@ namespace ConsoleApplication
             }
             catch (FormatException)
             {
-                throw new ArgsException(parameter, ErrorCode.InvalidInteger);
+                throw new ArgsException(
+                    ErrorCode.InvalidInteger,
+                    errorParameter: parameter);
             }
         }
 

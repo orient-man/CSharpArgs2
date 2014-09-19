@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Args.cs" />
     <Compile Include="ArgsException.cs" />
+    <Compile Include="ArgsExceptionTests.cs" />
     <Compile Include="ArgsTests.cs" />
     <Compile Include="BoolArgumentMarshaler.cs" />
     <Compile Include="ErrorCode.cs" />
