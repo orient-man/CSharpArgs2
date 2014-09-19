@@ -77,10 +77,7 @@ namespace ConsoleApplication
         private void ParseArguments()
         {
             while (currentArgument.MoveNext())
-            {
-                var arg = currentArgument.Current;
-                ParseArgument(arg);
-            }
+                ParseArgument(currentArgument.Current);
         }
 
         private void ParseArgument(string arg)
