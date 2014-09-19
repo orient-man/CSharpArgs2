@@ -6,7 +6,7 @@ namespace ConsoleApplication
     public class ArgsTests
     {
         [Test]
-        public void TestNonLetterSchema()
+        public void NonLetterSchema()
         {
             try
             {
@@ -21,7 +21,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestInvalidArgumentFormat()
+        public void InvalidArgumentFormat()
         {
             try
             {
@@ -36,7 +36,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestSimpleBooleanPresent()
+        public void SimpleBooleanPresent()
         {
             var args = new Args("x", new[] { "-x" });
             Assert.AreEqual(true, args.GetBoolean('x'));
@@ -65,7 +65,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestSimpleStringPresent()
+        public void SimpleStringPresent()
         {
             var args = new Args("x*", new[] { "-x", "param" });
             Assert.True(args.Has('x'));
@@ -74,7 +74,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestMissingStringArgument()
+        public void MissingStringArgument()
         {
             try
             {
@@ -89,7 +89,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestSpacesInFormat()
+        public void SpacesInFormat()
         {
             var args = new Args("x, y", new[] { "-xy" });
             Assert.True(args.Has('x'));
@@ -98,7 +98,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestSimpleIntPresent()
+        public void SimpleIntPresent()
         {
             var args = new Args("x#", new[] { "-x", "42" });
             Assert.True(args.Has('x'));
@@ -107,7 +107,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestInvalidInteger()
+        public void InvalidInteger()
         {
             try
             {
@@ -122,7 +122,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestMissingInteger()
+        public void MissingInteger()
         {
             try
             {
@@ -137,7 +137,7 @@ namespace ConsoleApplication
         }
 
         [Test]
-        public void TestExtraArguments()
+        public void ExtraArguments()
         {
             var args = new Args("x,y*", new[] { "-x", "-y", "alpha", "beta" });
             Assert.True(args.GetBoolean('x'));
