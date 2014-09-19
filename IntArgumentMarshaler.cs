@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace ConsoleApplication
 {
-    public class IntArgumentMarshaler : IArgumentMarshaler
+    public class IntArgumentMarshaler : IArgumentMarshaler<int>
     {
-        private int intValue;
+        public int Value { get; private set; }
 
         public void Set(IEnumerator<string> currentArgument)
         {
@@ -15,7 +15,7 @@ namespace ConsoleApplication
             {
                 currentArgument.MoveNext();
                 parameter = currentArgument.Current;
-                intValue = Int32.Parse(parameter);
+                Value = Int32.Parse(parameter);
             }
             catch (InvalidOperationException)
             {
@@ -27,11 +27,6 @@ namespace ConsoleApplication
                     ErrorCode.InvalidInteger,
                     errorParameter: parameter);
             }
-        }
-
-        public object Get()
-        {
-            return intValue;
         }
     }
 }

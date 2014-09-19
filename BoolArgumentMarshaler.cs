@@ -2,18 +2,13 @@
 
 namespace ConsoleApplication
 {
-    public class BoolArgumentMarshaler : IArgumentMarshaler
+    public class BoolArgumentMarshaler : IArgumentMarshaler<bool>
     {
-        private bool boolValue;
+        public bool Value { get; private set; }
 
         public void Set(IEnumerator<string> currentArgument)
         {
-            boolValue = true;
-        }
-
-        public object Get()
-        {
-            return boolValue;
+            Value = true;
         }
     }
 }

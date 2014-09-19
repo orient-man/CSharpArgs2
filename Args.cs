@@ -135,17 +135,17 @@ namespace ConsoleApplication
 
         public string GetString(char arg)
         {
-            return GetMarshaler(arg).GetValue("");
+            return GetMarshaler(arg).GetValueOrDefault("");
         }
 
         public int GetInt(char arg)
         {
-            return GetMarshaler(arg).GetValue(0);
+            return GetMarshaler(arg).GetValueOrDefault(0);
         }
 
         public bool GetBoolean(char arg)
         {
-            return GetMarshaler(arg).GetValue(false);
+            return GetMarshaler(arg).GetValueOrDefault(false);
         }
 
         private IArgumentMarshaler GetMarshaler(char arg)
