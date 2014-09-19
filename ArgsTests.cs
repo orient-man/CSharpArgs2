@@ -6,6 +6,13 @@ namespace ConsoleApplication
     public class ArgsTests
     {
         [Test]
+        public void CreateWithNoSchemaOrArguments()
+        {
+            var args = new Args("", new string[0]);
+            Assert.AreEqual(0, args.Cardinality());
+        }
+
+        [Test]
         public void NonLetterSchema()
         {
             try
