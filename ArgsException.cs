@@ -42,6 +42,15 @@ namespace ConsoleApplication
                     return string.Format(
                         "Could not find integer parameter for -{0}.",
                         ErrorArgumentId);
+                case ErrorCode.InvalidDouble:
+                    return string.Format(
+                        "Argument -{0} expects a double but was '{1}'.",
+                        ErrorArgumentId,
+                        errorParameter);
+                case ErrorCode.MissingDouble:
+                    return string.Format(
+                        "Could not find double parameter for -{0}.",
+                        ErrorArgumentId);
                 case ErrorCode.InvalidArgumentName:
                     return String.Format(
                         "'{0}' is not a valid argument name.",

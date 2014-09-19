@@ -38,6 +38,24 @@ namespace ConsoleApplication
         }
 
         [Test]
+        public void InvalidDobuleMessage()
+        {
+            var e = new ArgsException(ErrorCode.InvalidDouble, 'x', "Forty two");
+            Assert.AreEqual(
+                "Argument -x expects a double but was 'Forty two'.",
+                e.GetErrorMessage());
+        }
+
+        [Test]
+        public void MissingDoubleMessage()
+        {
+            var e = new ArgsException(ErrorCode.MissingDouble, 'x');
+            Assert.AreEqual(
+                "Could not find double parameter for -x.",
+                e.GetErrorMessage());
+        }
+
+        [Test]
         public void InvalidArgumentName()
         {
             var e = new ArgsException(ErrorCode.InvalidArgumentName, '#');

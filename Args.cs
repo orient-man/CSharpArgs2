@@ -11,7 +11,8 @@ namespace ConsoleApplication
             {
                 { "", () => new BoolArgumentMarshaler() },
                 { "*", () => new StringArgumentMarshaler() },
-                { "#", () => new IntArgumentMarshaler() }
+                { "#", () => new IntArgumentMarshaler() },
+                { "##", () => new DoubleArgumentMarshaler() }
             };
 
         private readonly string schema;
@@ -146,6 +147,11 @@ namespace ConsoleApplication
         public bool GetBoolean(char arg)
         {
             return GetMarshaler(arg).GetValueOrDefault(false);
+        }
+
+        public double GetDouble(char arg)
+        {
+            return GetMarshaler(arg).GetValueOrDefault(0.0);
         }
 
         private IArgumentMarshaler GetMarshaler(char arg)

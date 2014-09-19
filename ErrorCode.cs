@@ -8,6 +8,8 @@ namespace ConsoleApplication
         MissingString,
         MissingInteger,
         InvalidInteger,
+        MissingDouble,
+        InvalidDouble,
         UnexpectedArgument
     }
 }

@@ -140,6 +140,45 @@ namespace ConsoleApplication
         }
 
         [Test]
+        public void SimpleDoublePresent()
+        {
+            var args = new Args("x##", new[] { "-x", "42.13" });
+            Assert.True(args.Has('x'));
+            Assert.AreEqual(42.13, args.GetDouble('x'));
+            Assert.AreEqual(1, args.Cardinality());
+        }
+
+        [Test]
+        public void InvalidDouble()
+        {
+            try
+            {
+                new Args("x##", new[] { "-x", "Forty two" });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.InvalidDouble, e.ErrorCode);
+                Assert.AreEqual('x', e.ErrorArgumentId);
+            }
+        }
+
+        [Test]
+        public void MissingDouble()
+        {
+            try
+            {
+                new Args("x##", new[] { "-x" });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.MissingDouble, e.ErrorCode);
+                Assert.AreEqual('x', e.ErrorArgumentId);
+            }
+        }
+
+        [Test]
         public void ExtraArguments()
         {
             var args = new Args("x,y*", new[] { "-x", "-y", "alpha", "beta" });
