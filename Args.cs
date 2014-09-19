@@ -16,27 +16,24 @@ namespace ConsoleApplication
             };
 
         private readonly string schema;
-        private readonly string[] args;
         private readonly IEnumerator<string> currentArgument;
 
         private readonly IDictionary<char, IArgumentMarshaler> marshalers =
             new Dictionary<char, IArgumentMarshaler>();
 
-        private readonly HashSet<char> argsFound = new HashSet<char>();
+        private readonly ISet<char> argsFound = new HashSet<char>();
 
         public Args(string schema, string[] args)
         {
             this.schema = schema;
-            this.args = args;
-            currentArgument = args.AsEnumerable().GetEnumerator();
-            Parse();
+            this.currentArgument = args.AsEnumerable().GetEnumerator();
+
+            if (this.schema.Length != 0 || args.Length != 0)
+                Parse();
         }
 
         private void Parse()
         {
-            if (schema.Length == 0 && args.Length == 0)
-                return;
-
             ParseSchema();
             ParseArguments();
         }
