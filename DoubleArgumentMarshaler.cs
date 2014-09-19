@@ -14,8 +14,7 @@ namespace ConsoleApplication
 
             try
             {
-                currentArgument.MoveNext();
-                parameter = currentArgument.Current;
+                parameter = currentArgument.Next();
                 Value = double.Parse(parameter, CultureInfo.InvariantCulture);
             }
             catch (InvalidOperationException)

@@ -13,8 +13,7 @@ namespace ConsoleApplication
 
             try
             {
-                currentArgument.MoveNext();
-                parameter = currentArgument.Current;
+                parameter = currentArgument.Next();
                 Value = Int32.Parse(parameter);
             }
             catch (InvalidOperationException)

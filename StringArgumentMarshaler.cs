@@ -11,8 +11,7 @@ namespace ConsoleApplication
         {
             try
             {
-                currentArgument.MoveNext();
-                Value = currentArgument.Current;
+                Value = currentArgument.Next();
             }
             catch (InvalidOperationException)
             {
