@@ -15,45 +15,33 @@ namespace ConsoleApplication
                 { "##", () => new DoubleArgumentMarshaler() }
             };
 
-        private readonly string schema;
         private readonly IEnumerator<string> currentArgument;
+        private readonly IDictionary<char, IArgumentMarshaler> marshalers;
+        private readonly ISet<char> argsFound;
 
-        private readonly IDictionary<char, IArgumentMarshaler> marshalers =
-            new Dictionary<char, IArgumentMarshaler>();
-
-        private readonly ISet<char> argsFound = new HashSet<char>();
-
-        public Args(string schema, string[] args)
+        public Args(string schema, IEnumerable<string> args)
         {
-            this.schema = schema;
-            this.currentArgument = args.AsEnumerable().GetEnumerator();
-
-            if (this.schema.Length != 0 || args.Length != 0)
-                Parse();
+            currentArgument = args.AsEnumerable().GetEnumerator();
+            marshalers = ParseSchema(schema);
+            argsFound = new HashSet<char>(ParseArguments());
         }
 
-        private void Parse()
+        private static IDictionary<char, IArgumentMarshaler> ParseSchema(string schema)
         {
-            ParseSchema();
-            ParseArguments();
+            return schema
+                .Split(',')
+                .Where(o => o.Length > 0)
+                .Select(o => o.Trim())
+                .Select(o => new { ElementId = o[0], ElementTail = o.Substring(1) })
+                .ToDictionary(
+                    o => o.ElementId,
+                    o => ParseSchemaElement(o.ElementId, o.ElementTail));
         }
 
-        private void ParseSchema()
+        private static IArgumentMarshaler ParseSchemaElement(
+            char elementId,
+            string elementTail)
         {
-            foreach (var element in schema.Split(','))
-            {
-                if (element.Length > 0)
-                {
-                    var trimmedElement = element.Trim();
-                    ParseSchemaElement(trimmedElement);
-                }
-            }
-        }
-
-        private void ParseSchemaElement(string element)
-        {
-            var elementId = element[0];
-            var elementTail = element.Substring(1);
             ValidateSchemaElementId(elementId);
             Func<IArgumentMarshaler> marshalerFactory;
             if (!AvailableMarshalers.TryGetValue(elementTail, out marshalerFactory))
@@ -62,7 +50,7 @@ namespace ConsoleApplication
                     elementId,
                     elementTail);
 
-            marshalers[elementId] = marshalerFactory();
+            return marshalerFactory();
         }
 
         private static void ValidateSchemaElementId(char elementId)
@@ -71,30 +59,29 @@ namespace ConsoleApplication
                 throw new ArgsException(ErrorCode.InvalidArgumentName, elementId);
         }
 
-        private void ParseArguments()
+        private IEnumerable<char> ParseArguments()
         {
             while (currentArgument.MoveNext())
-                ParseArgument(currentArgument.Current);
+                foreach (var arg in ParseArgument(currentArgument.Current))
+                    yield return arg;
         }
 
-        private void ParseArgument(string arg)
+        private IEnumerable<char> ParseArgument(string arg)
         {
-            if (arg.StartsWith("-"))
-                ParseElements(arg);
+            return arg.StartsWith("-") ? ParseElements(arg) : Enumerable.Empty<char>();
         }
 
-        private void ParseElements(string arg)
+        private IEnumerable<char> ParseElements(string arg)
         {
-            for (var i = 1; i < arg.Length; i++)
-                ParseElement(arg[i]);
+            return arg.Skip(1).Select(ParseElement);
         }
 
-        private void ParseElement(char argChar)
+        private char ParseElement(char argChar)
         {
             if (SetArgument(argChar))
-                argsFound.Add(argChar);
-            else
-                throw new ArgsException(ErrorCode.UnexpectedArgument, argChar);
+                return argChar;
+
+            throw new ArgsException(ErrorCode.UnexpectedArgument, argChar);
         }
 
         private bool SetArgument(char argChar)
@@ -119,13 +106,6 @@ namespace ConsoleApplication
         public int Cardinality()
         {
             return argsFound.Count;
-        }
-
-        public string Usage()
-        {
-            if (schema.Length > 0)
-                return "-[" + schema + "]";
-            return "";
         }
 
         public string GetString(char arg)
