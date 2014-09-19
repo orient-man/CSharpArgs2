@@ -13,6 +13,36 @@ namespace ConsoleApplication
         }
 
         [Test]
+        public void NoSchemaButWithOneArgument()
+        {
+            try
+            {
+                new Args("", new[] { "-x" });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.UnexpectedArgument, e.ErrorCode);
+                Assert.AreEqual('x', e.ErrorArgumentId);
+            }
+        }
+
+        [Test]
+        public void NoSchemaButWithMultipleArguments()
+        {
+            try
+            {
+                new Args("", new[] { "-x", "-y" });
+                Assert.Fail();
+            }
+            catch (ArgsException e)
+            {
+                Assert.AreEqual(ErrorCode.UnexpectedArgument, e.ErrorCode);
+                Assert.AreEqual('x', e.ErrorArgumentId);
+            }
+        }
+
+        [Test]
         public void NonLetterSchema()
         {
             try
