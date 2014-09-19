@@ -21,7 +21,7 @@ namespace ConsoleApplication
 
         public Args(string schema, IEnumerable<string> args)
         {
-            currentArgument = args.AsEnumerable().GetEnumerator();
+            currentArgument = args.GetEnumerator();
             marshalers = ParseSchema(schema);
             argsFound = new HashSet<char>(ParseArguments());
         }
