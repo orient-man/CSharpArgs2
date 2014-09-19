@@ -135,44 +135,17 @@ namespace ConsoleApplication
 
         public string GetString(char arg)
         {
-            var m = GetMarshaler(arg);
-
-            try
-            {
-                return m != null ? (string)m.Get() : "";
-            }
-            catch (InvalidCastException)
-            {
-                throw new ArgsException();
-            }
+            return GetMarshaler(arg).GetValue("");
         }
 
         public int GetInt(char arg)
         {
-            var m = GetMarshaler(arg);
-
-            try
-            {
-                return m != null ? (int)m.Get() : 0;
-            }
-            catch (InvalidCastException)
-            {
-                throw new ArgsException();
-            }
+            return GetMarshaler(arg).GetValue(0);
         }
 
         public bool GetBoolean(char arg)
         {
-            var m = GetMarshaler(arg);
-
-            try
-            {
-                return m != null && (bool)m.Get();
-            }
-            catch (InvalidCastException)
-            {
-                throw new ArgsException();
-            }
+            return GetMarshaler(arg).GetValue(false);
         }
 
         private IArgumentMarshaler GetMarshaler(char arg)
