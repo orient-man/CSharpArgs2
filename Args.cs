@@ -6,6 +6,14 @@ namespace ConsoleApplication
 {
     public class Args
     {
+        private static readonly IDictionary<string, Func<IArgumentMarshaler>> AvailableMarshalers =
+            new Dictionary<string, Func<IArgumentMarshaler>>
+            {
+                { "", () => new BoolArgumentMarshaler() },
+                { "*", () => new StringArgumentMarshaler() },
+                { "#", () => new IntArgumentMarshaler() }
+            };
+
         private readonly string schema;
         private readonly string[] args;
         private readonly IEnumerator<string> currentArgument;
@@ -49,40 +57,20 @@ namespace ConsoleApplication
             var elementId = element[0];
             var elementTail = element.Substring(1);
             ValidateSchemaElementId(elementId);
-            if (IsBooleanSchemaElement(elementTail))
-                marshalers[elementId] = new BoolArgumentMarshaler();
-            else if (IsStringSchemaElement(elementTail))
-                marshalers[elementId] = new StringArgumentMarshaler();
-            else if (IsIntegerSchemaElement(elementTail))
-                marshalers[elementId] = new IntArgumentMarshaler();
-            else
-            {
+            Func<IArgumentMarshaler> marshalerFactory;
+            if (!AvailableMarshalers.TryGetValue(elementTail, out marshalerFactory))
                 throw new ArgsException(
                     ErrorCode.InvalidArgumentFormat,
                     elementId,
                     elementTail);
-            }
+
+            marshalers[elementId] = marshalerFactory();
         }
 
         private static void ValidateSchemaElementId(char elementId)
         {
             if (!char.IsLetter(elementId))
                 throw new ArgsException(ErrorCode.InvalidArgumentName, elementId);
-        }
-
-        private static bool IsStringSchemaElement(string elementTail)
-        {
-            return elementTail == "*";
-        }
-
-        private static bool IsBooleanSchemaElement(string elementTail)
-        {
-            return elementTail.Length == 0;
-        }
-
-        private static bool IsIntegerSchemaElement(string elementTail)
-        {
-            return elementTail == "#";
         }
 
         private void ParseArguments()
