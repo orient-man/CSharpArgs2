@@ -63,7 +63,7 @@ namespace ConsoleApplication
         {
             var currentArgument = args.GetEnumerator();
             while (currentArgument.MoveNext())
-                foreach (var arg in FindSchemaArguments(currentArgument.Current))
+                foreach (var arg in FindElements(currentArgument.Current))
                 {
                     IArgumentMarshaler m;
                     try
@@ -85,7 +85,7 @@ namespace ConsoleApplication
                 }
         }
 
-        private static IEnumerable<char> FindSchemaArguments(string arg)
+        private static IEnumerable<char> FindElements(string arg)
         {
             return arg.StartsWith("-") ? arg.Skip(1) : Enumerable.Empty<char>();
         }
