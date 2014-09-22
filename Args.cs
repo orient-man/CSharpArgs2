@@ -6,7 +6,7 @@ namespace ConsoleApplication
 {
     public class Args
     {
-        private static readonly IDictionary<string, Func<IArgumentMarshaler>> AvailableMarshalers =
+        private static readonly IDictionary<string, Func<IArgumentMarshaler>> Marshalers =
             new Dictionary<string, Func<IArgumentMarshaler>>
             {
                 { "", () => new BoolArgumentMarshaler() },
@@ -15,15 +15,13 @@ namespace ConsoleApplication
                 { "##", () => new DoubleArgumentMarshaler() }
             };
 
-        private readonly IEnumerator<string> currentArgument;
-        private readonly IDictionary<char, IArgumentMarshaler> marshalers;
-        private readonly ISet<char> argsFound;
+        private readonly IDictionary<char, IArgumentMarshaler> argsFound;
 
         public Args(string schema, IEnumerable<string> args)
         {
-            currentArgument = args.GetEnumerator();
-            marshalers = ParseSchema(schema);
-            argsFound = new HashSet<char>(ParseArguments());
+            argsFound =
+                ParseArguments(args, ParseSchema(schema))
+                    .ToDictionary(o => o.Item1, o => o.Item2);
         }
 
         private static IDictionary<char, IArgumentMarshaler> ParseSchema(string schema)
@@ -44,7 +42,7 @@ namespace ConsoleApplication
         {
             ValidateSchemaElementId(elementId);
             Func<IArgumentMarshaler> marshalerFactory;
-            if (!AvailableMarshalers.TryGetValue(elementTail, out marshalerFactory))
+            if (!Marshalers.TryGetValue(elementTail, out marshalerFactory))
                 throw new ArgsException(
                     ErrorCode.InvalidArgumentFormat,
                     elementId,
@@ -59,48 +57,37 @@ namespace ConsoleApplication
                 throw new ArgsException(ErrorCode.InvalidArgumentName, elementId);
         }
 
-        private IEnumerable<char> ParseArguments()
+        private static IEnumerable<Tuple<char, IArgumentMarshaler>> ParseArguments(
+            IEnumerable<string> args,
+            IDictionary<char, IArgumentMarshaler> marshalers)
         {
+            var currentArgument = args.GetEnumerator();
             while (currentArgument.MoveNext())
-                foreach (var arg in ParseArgument(currentArgument.Current))
-                    yield return arg;
+                foreach (var arg in FindSchemaArguments(currentArgument.Current))
+                {
+                    IArgumentMarshaler m;
+                    try
+                    {
+                        m = marshalers[arg];
+                        m.Set(currentArgument);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        throw new ArgsException(ErrorCode.UnexpectedArgument, arg);
+                    }
+                    catch (ArgsException e)
+                    {
+                        e.ErrorArgumentId = arg;
+                        throw;
+                    }
+
+                    yield return new Tuple<char, IArgumentMarshaler>(arg, m);
+                }
         }
 
-        private IEnumerable<char> ParseArgument(string arg)
+        private static IEnumerable<char> FindSchemaArguments(string arg)
         {
-            return arg.StartsWith("-") ? ParseElements(arg) : Enumerable.Empty<char>();
-        }
-
-        private IEnumerable<char> ParseElements(string arg)
-        {
-            return arg.Skip(1).Select(ParseElement);
-        }
-
-        private char ParseElement(char argChar)
-        {
-            if (SetArgument(argChar))
-                return argChar;
-
-            throw new ArgsException(ErrorCode.UnexpectedArgument, argChar);
-        }
-
-        private bool SetArgument(char argChar)
-        {
-            var m = GetMarshaler(argChar);
-            if (m == null)
-                return false;
-
-            try
-            {
-                m.Set(currentArgument);
-            }
-            catch (ArgsException e)
-            {
-                e.ErrorArgumentId = argChar;
-                throw;
-            }
-
-            return true;
+            return arg.StartsWith("-") ? arg.Skip(1) : Enumerable.Empty<char>();
         }
 
         public int Cardinality()
@@ -110,33 +97,27 @@ namespace ConsoleApplication
 
         public string GetString(char arg)
         {
-            return GetMarshaler(arg).GetValueOrDefault("");
+            return argsFound[arg].GetValueOrDefault("");
         }
 
         public int GetInt(char arg)
         {
-            return GetMarshaler(arg).GetValueOrDefault(0);
+            return argsFound[arg].GetValueOrDefault(0);
         }
 
         public bool GetBoolean(char arg)
         {
-            return GetMarshaler(arg).GetValueOrDefault(false);
+            return argsFound[arg].GetValueOrDefault(false);
         }
 
         public double GetDouble(char arg)
         {
-            return GetMarshaler(arg).GetValueOrDefault(0.0);
-        }
-
-        private IArgumentMarshaler GetMarshaler(char arg)
-        {
-            IArgumentMarshaler m;
-            return !marshalers.TryGetValue(arg, out m) ? null : m;
+            return argsFound[arg].GetValueOrDefault(0.0);
         }
 
         public bool Has(char arg)
         {
-            return argsFound.Contains(arg);
+            return argsFound.ContainsKey(arg);
         }
     }
 }
