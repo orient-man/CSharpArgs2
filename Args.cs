@@ -66,7 +66,7 @@ namespace ConsoleApplication
         {
             var argsFound = new ArgsDictionary();
             while (currentArgument.MoveNext())
-                foreach (var arg in FindArguments(currentArgument.Current))
+                foreach (var arg in FindElements(currentArgument.Current))
                 {
                     try
                     {
@@ -88,7 +88,7 @@ namespace ConsoleApplication
             return argsFound;
         }
 
-        private static IEnumerable<char> FindArguments(string arg)
+        private static IEnumerable<char> FindElements(string arg)
         {
             return arg.StartsWith("-") ? arg.Skip(1) : Enumerable.Empty<char>();
         }
