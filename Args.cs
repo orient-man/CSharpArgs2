@@ -41,14 +41,17 @@ namespace ConsoleApplication
             string elementTail)
         {
             ValidateSchemaElementId(elementId);
-            Func<IArgumentMarshaler> marshalerFactory;
-            if (!Marshalers.TryGetValue(elementTail, out marshalerFactory))
+            try
+            {
+                return Marshalers[elementTail]();
+            }
+            catch (KeyNotFoundException)
+            {
                 throw new ArgsException(
                     ErrorCode.InvalidArgumentFormat,
                     elementId,
                     elementTail);
-
-            return marshalerFactory();
+            }
         }
 
         private static void ValidateSchemaElementId(char elementId)
