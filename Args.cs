@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArgsDictionary =
+    System.Collections.Generic.Dictionary<char, ConsoleApplication.IArgumentMarshaler>;
 
 namespace ConsoleApplication
 {
@@ -15,16 +17,14 @@ namespace ConsoleApplication
                 { "##", () => new DoubleArgumentMarshaler() }
             };
 
-        private readonly IDictionary<char, IArgumentMarshaler> argsFound;
+        private readonly ArgsDictionary argsFound;
 
         public Args(string schema, IEnumerable<string> args)
         {
-            argsFound =
-                ParseArguments(args, ParseSchema(schema))
-                    .ToDictionary(o => o.Item1, o => o.Item2);
+            argsFound = ParseArguments(args.GetEnumerator(), ParseSchema(schema));
         }
 
-        private static IDictionary<char, IArgumentMarshaler> ParseSchema(string schema)
+        private static ArgsDictionary ParseSchema(string schema)
         {
             return schema
                 .Split(',')
@@ -60,18 +60,18 @@ namespace ConsoleApplication
                 throw new ArgsException(ErrorCode.InvalidArgumentName, elementId);
         }
 
-        private static IEnumerable<Tuple<char, IArgumentMarshaler>> ParseArguments(
-            IEnumerable<string> args,
-            IDictionary<char, IArgumentMarshaler> marshalers)
+        private static ArgsDictionary ParseArguments(
+            IEnumerator<string> currentArgument,
+            ArgsDictionary marshalers)
         {
-            var currentArgument = args.GetEnumerator();
+            var argsFound = new ArgsDictionary();
             while (currentArgument.MoveNext())
-                foreach (var arg in FindElements(currentArgument.Current))
+                foreach (var arg in FindArguments(currentArgument.Current))
                 {
-                    IArgumentMarshaler m;
                     try
                     {
-                        m = marshalers[arg];
+                        var m = marshalers[arg];
+                        argsFound[arg] = m;
                         m.Set(currentArgument);
                     }
                     catch (KeyNotFoundException)
@@ -83,12 +83,12 @@ namespace ConsoleApplication
                         e.ErrorArgumentId = arg;
                         throw;
                     }
-
-                    yield return new Tuple<char, IArgumentMarshaler>(arg, m);
                 }
+
+            return argsFound;
         }
 
-        private static IEnumerable<char> FindElements(string arg)
+        private static IEnumerable<char> FindArguments(string arg)
         {
             return arg.StartsWith("-") ? arg.Skip(1) : Enumerable.Empty<char>();
         }
