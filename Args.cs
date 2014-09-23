@@ -28,8 +28,8 @@ namespace ConsoleApplication
         {
             return schema
                 .Split(',')
-                .Where(o => o.Length > 0)
                 .Select(o => o.Trim())
+                .Where(o => o.Length > 0)
                 .Select(o => new { ElementId = o[0], ElementTail = o.Substring(1) })
                 .ToDictionary(
                     o => o.ElementId,
