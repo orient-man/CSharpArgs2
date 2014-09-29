@@ -84,7 +84,7 @@ namespace ConsoleApplication
         public void WhenArgumentNotPresentGetBooleanReturnsFalse()
         {
             var args = new Args("x#", new[] { "-x", "42" });
-            Assert.AreEqual(false, args.GetBoolean('x'));
+            Assert.AreEqual(false, args.GetBoolean('y'));
             Assert.AreEqual(1, args.Cardinality());
         }
 
@@ -92,7 +92,7 @@ namespace ConsoleApplication
         public void WhenArgumentNotPresentGetIntReturnsZero()
         {
             var args = new Args("x", new[] { "-x" });
-            Assert.AreEqual(0, args.GetInt('x'));
+            Assert.AreEqual(0, args.GetInt('y'));
             Assert.AreEqual(1, args.Cardinality());
         }
 
@@ -100,7 +100,7 @@ namespace ConsoleApplication
         public void WhenArgumentNotPresentGetStringReturnEmptyString()
         {
             var args = new Args("x", new[] { "-x" });
-            Assert.AreEqual("", args.GetString('x'));
+            Assert.AreEqual("", args.GetString('y'));
             Assert.AreEqual(1, args.Cardinality());
         }
 

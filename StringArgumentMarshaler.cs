@@ -3,15 +3,13 @@ using System.Collections.Generic;
 
 namespace ConsoleApplication
 {
-    public class StringArgumentMarshaler : IArgumentMarshaler<string>
+    public class StringArgumentMarshaler : IArgumentMarshaler
     {
-        public string Value { get; private set; }
-
-        public void Set(IEnumerator<string> currentArgument)
+        public object Marshal(IEnumerator<string> currentArgument)
         {
             try
             {
-                Value = currentArgument.Next();
+                return currentArgument.Next();
             }
             catch (InvalidOperationException)
             {

@@ -48,7 +48,6 @@
     <Compile Include="ArgsException.cs" />
     <Compile Include="ArgsExceptionTests.cs" />
     <Compile Include="ArgsTests.cs" />
-    <Compile Include="ArgumentMarshalerExtensions.cs" />
     <Compile Include="BoolArgumentMarshaler.cs" />
     <Compile Include="DoubleArgumentMarshaler.cs" />
     <Compile Include="EnumeratorExtensions.cs" />

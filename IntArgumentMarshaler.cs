@@ -3,18 +3,16 @@ using System.Collections.Generic;
 
 namespace ConsoleApplication
 {
-    public class IntArgumentMarshaler : IArgumentMarshaler<int>
+    public class IntArgumentMarshaler : IArgumentMarshaler
     {
-        public int Value { get; private set; }
-
-        public void Set(IEnumerator<string> currentArgument)
+        public object Marshal(IEnumerator<string> currentArgument)
         {
             string parameter = null;
 
             try
             {
                 parameter = currentArgument.Next();
-                Value = Int32.Parse(parameter);
+                return Int32.Parse(parameter);
             }
             catch (InvalidOperationException)
             {
@@ -22,9 +20,7 @@ namespace ConsoleApplication
             }
             catch (FormatException)
             {
-                throw new ArgsException(
-                    ErrorCode.InvalidInteger,
-                    errorParameter: parameter);
+                throw new ArgsException(ErrorCode.InvalidInteger, errorParameter: parameter);
             }
         }
     }

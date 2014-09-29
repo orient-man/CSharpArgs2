@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArgsDictionary =
-    System.Collections.Generic.Dictionary<char, ConsoleApplication.IArgumentMarshaler>;
 
 namespace ConsoleApplication
 {
@@ -17,14 +15,14 @@ namespace ConsoleApplication
                 { "##", () => new DoubleArgumentMarshaler() }
             };
 
-        private readonly ArgsDictionary argsFound;
+        private readonly IDictionary<char, object> values;
 
         public Args(string schema, IEnumerable<string> args)
         {
-            argsFound = ParseArguments(args.GetEnumerator(), ParseSchema(schema));
+            values = ParseArguments(args.GetEnumerator(), ParseSchema(schema));
         }
 
-        private static ArgsDictionary ParseSchema(string schema)
+        private static IDictionary<char, IArgumentMarshaler> ParseSchema(string schema)
         {
             return schema
                 .Split(',')
@@ -60,32 +58,16 @@ namespace ConsoleApplication
                 throw new ArgsException(ErrorCode.InvalidArgumentName, elementId);
         }
 
-        private static ArgsDictionary ParseArguments(
+        private static IDictionary<char, object> ParseArguments(
             IEnumerator<string> currentArgument,
-            ArgsDictionary marshalers)
+            IDictionary<char, IArgumentMarshaler> marshalers)
         {
-            var argsFound = new ArgsDictionary();
+            var values = new Dictionary<char, object>();
             while (currentArgument.MoveNext())
                 foreach (var arg in FindElements(currentArgument.Current))
-                {
-                    try
-                    {
-                        var m = marshalers[arg];
-                        argsFound[arg] = m;
-                        m.Set(currentArgument);
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        throw new ArgsException(ErrorCode.UnexpectedArgument, arg);
-                    }
-                    catch (ArgsException e)
-                    {
-                        e.ErrorArgumentId = arg;
-                        throw;
-                    }
-                }
+                    values[arg] = ParseArgument(arg, currentArgument, marshalers);
 
-            return argsFound;
+            return values;
         }
 
         private static IEnumerable<char> FindElements(string arg)
@@ -93,34 +75,63 @@ namespace ConsoleApplication
             return arg.StartsWith("-") ? arg.Skip(1) : Enumerable.Empty<char>();
         }
 
+        private static object ParseArgument(
+            char arg,
+            IEnumerator<string> currentArgument,
+            IDictionary<char, IArgumentMarshaler> marshalers)
+        {
+            try
+            {
+                return marshalers[arg].Marshal(currentArgument);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new ArgsException(ErrorCode.UnexpectedArgument, arg);
+            }
+            catch (ArgsException e)
+            {
+                e.ErrorArgumentId = arg;
+                throw;
+            }
+        }
+
         public int Cardinality()
         {
-            return argsFound.Count;
+            return values.Count;
         }
 
         public string GetString(char arg)
         {
-            return argsFound[arg].GetValueOrDefault("");
+            return GetValue(arg, "");
         }
 
         public int GetInt(char arg)
         {
-            return argsFound[arg].GetValueOrDefault(0);
+            return GetValue(arg, 0);
         }
 
         public bool GetBoolean(char arg)
         {
-            return argsFound[arg].GetValueOrDefault(false);
+            return GetValue(arg, false);
         }
 
         public double GetDouble(char arg)
         {
-            return argsFound[arg].GetValueOrDefault(0.0);
+            return GetValue(arg, 0.0);
+        }
+
+        private T GetValue<T>(char arg, T defaultValue)
+        {
+            object value;
+            if (!values.TryGetValue(arg, out value))
+                return defaultValue;
+
+            return value == null ? defaultValue : (T)value;
         }
 
         public bool Has(char arg)
         {
-            return argsFound.ContainsKey(arg);
+            return values.ContainsKey(arg);
         }
     }
 }

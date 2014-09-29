@@ -4,18 +4,16 @@ using System.Globalization;
 
 namespace ConsoleApplication
 {
-    public class DoubleArgumentMarshaler : IArgumentMarshaler<double>
+    public class DoubleArgumentMarshaler : IArgumentMarshaler
     {
-        public double Value { get; private set; }
-
-        public void Set(IEnumerator<string> currentArgument)
+        public object Marshal(IEnumerator<string> currentArgument)
         {
             string parameter = null;
 
             try
             {
                 parameter = currentArgument.Next();
-                Value = double.Parse(parameter, CultureInfo.InvariantCulture);
+                return double.Parse(parameter, CultureInfo.InvariantCulture);
             }
             catch (InvalidOperationException)
             {
@@ -23,9 +21,7 @@ namespace ConsoleApplication
             }
             catch (FormatException)
             {
-                throw new ArgsException(
-                    ErrorCode.InvalidDouble,
-                    errorParameter: parameter);
+                throw new ArgsException(ErrorCode.InvalidDouble, errorParameter: parameter);
             }
         }
     }

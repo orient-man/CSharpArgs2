@@ -2,13 +2,11 @@
 
 namespace ConsoleApplication
 {
-    public class BoolArgumentMarshaler : IArgumentMarshaler<bool>
+    public class BoolArgumentMarshaler : IArgumentMarshaler
     {
-        public bool Value { get; private set; }
-
-        public void Set(IEnumerator<string> currentArgument)
+        public object Marshal(IEnumerator<string> currentArgument)
         {
-            Value = true;
+            return true;
         }
     }
 }
