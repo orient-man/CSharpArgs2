@@ -6,23 +6,25 @@ namespace ConsoleApplication
 {
     public class Args
     {
-        private static readonly IDictionary<string, Func<IArgumentMarshaler>> Marshalers =
-            new Dictionary<string, Func<IArgumentMarshaler>>
-            {
-                { "", () => new BoolArgumentMarshaler() },
-                { "*", () => new StringArgumentMarshaler() },
-                { "#", () => new IntArgumentMarshaler() },
-                { "##", () => new DoubleArgumentMarshaler() }
-            };
+        private static readonly IReadOnlyDictionary<string, Func<IArgumentMarshaler>>
+            Marshalers =
+                new Dictionary<string, Func<IArgumentMarshaler>>
+                {
+                    { "", () => new BoolArgumentMarshaler() },
+                    { "*", () => new StringArgumentMarshaler() },
+                    { "#", () => new IntArgumentMarshaler() },
+                    { "##", () => new DoubleArgumentMarshaler() }
+                };
 
-        private readonly IDictionary<char, object> values;
+        private readonly IReadOnlyDictionary<char, object> values;
 
         public Args(string schema, IEnumerable<string> args)
         {
             values = ParseArguments(args.GetEnumerator(), ParseSchema(schema));
         }
 
-        private static IDictionary<char, IArgumentMarshaler> ParseSchema(string schema)
+        private static IReadOnlyDictionary<char, IArgumentMarshaler> ParseSchema(
+            string schema)
         {
             return schema
                 .Split(',')
@@ -58,9 +60,9 @@ namespace ConsoleApplication
                 throw new ArgsException(ErrorCode.InvalidArgumentName, elementId);
         }
 
-        private static IDictionary<char, object> ParseArguments(
+        private static IReadOnlyDictionary<char, object> ParseArguments(
             IEnumerator<string> currentArgument,
-            IDictionary<char, IArgumentMarshaler> marshalers)
+            IReadOnlyDictionary<char, IArgumentMarshaler> marshalers)
         {
             var values = new Dictionary<char, object>();
             while (currentArgument.MoveNext())
@@ -78,7 +80,7 @@ namespace ConsoleApplication
         private static object ParseArgument(
             char arg,
             IEnumerator<string> currentArgument,
-            IDictionary<char, IArgumentMarshaler> marshalers)
+            IReadOnlyDictionary<char, IArgumentMarshaler> marshalers)
         {
             try
             {
